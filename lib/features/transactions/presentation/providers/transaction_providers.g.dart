@@ -6,7 +6,7 @@ part of 'transaction_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$transactionsHash() => r'f64f1d1c0ec96f1c15daf7cbd61cfd8644e24fcc';
+String _$transactionsHash() => r'f0173603f85777ae4a47b381d4982023e053608c';
 
 /// See also [transactions].
 @ProviderFor(transactions)
@@ -26,7 +26,7 @@ final transactionsProvider =
 // ignore: unused_element
 typedef TransactionsRef = AutoDisposeFutureProviderRef<List<Transaction>>;
 String _$filteredTransactionsHash() =>
-    r'1e6d21fd1e354443ac921909868982a277ea7831';
+    r'd87ddd57b6c82ac6bc276bcb6268784310d3f57d';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -231,7 +231,7 @@ class _FilteredTransactionsProviderElement
       (origin as FilteredTransactionsProvider).dateRange;
 }
 
-String _$transactionHash() => r'cb1e4e48a244693483c50ab4b2722233436f7446';
+String _$transactionHash() => r'0a0fdb63054520197c441c2bde9b0d7385d40224';
 
 /// See also [transaction].
 @ProviderFor(transaction)

@@ -1,13 +1,11 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Env {
-  static String get backendUrl => 'http://localhost:3000';
+  static String get backendUrl => dotenv.env['BACKEND_URL'] ?? 'https://api.expense-tracker.com';
+  static String get apiKey => dotenv.env['API_KEY'] ?? '';
+  static String get environment => dotenv.env['ENVIRONMENT'] ?? 'development';
 
   static Future<void> init() async {
-    try {
-      //
-    } catch (e) {
-      print('Error loading .env file: $e');
-      // Fallback to default values if .env file is not found
-    }
+    await dotenv.load(fileName: '.env');
   }
-}
+} 

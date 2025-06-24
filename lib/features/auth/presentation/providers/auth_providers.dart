@@ -42,7 +42,7 @@ GetCurrentUserUseCase getCurrentUserUseCase(Ref ref) {
 
 @riverpod
 LogoutUseCase logoutUseCase(Ref ref) {
-  return LogoutUseCase(getIt<AuthRepository>()); 
+  return LogoutUseCase(getIt<AuthRepository>());
 }
 
 @riverpod
@@ -59,43 +59,30 @@ class AuthState extends AutoDisposeAsyncNotifier<User?> {
     if (!isLoggedIn) {
       return null;
     }
-    
+
     final result = await ref.read(getCurrentUserUseCaseProvider).call();
-    return result.fold(
-      (failure) => null,
-      (user) => user,
-    );
+    return result.fold((failure) => null, (user) => user);
   }
-  
+
   Future<void> login(String email, String password) async {
     state = const AsyncValue.loading();
-    
+
     final result = await ref.read(loginUseCaseProvider).call(email, password);
-    
+
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
       (user) => AsyncValue.data(user),
     );
   }
-  
-  Future<void> register(String name, String email, String password) async {
-    state = const AsyncValue.loading();
-    
-    final result = await ref.read(registerUseCaseProvider).call(name, email, password);
-    
-    state = result.fold(
-      (failure) => AsyncValue.error(failure.message, StackTrace.current),
-      (user) => AsyncValue.data(user),
-    );
-  }
-  
+
   Future<void> logout() async {
     state = const AsyncValue.loading();
-    
+
     final result = await ref.read(logoutUseCaseProvider).call();
-    
+
     result.fold(
-      (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
+      (failure) =>
+          state = AsyncValue.error(failure.message, StackTrace.current),
       (_) => state = const AsyncValue.data(null),
     );
   }
@@ -108,12 +95,12 @@ class LoginFormState extends AutoDisposeAsyncNotifier<void> {
   Future<void> build() async {
     return;
   }
-  
+
   Future<void> login(String email, String password) async {
     state = const AsyncValue.loading();
-    
+
     final result = await ref.read(loginUseCaseProvider).call(email, password);
-    
+
     result.fold(
       (failure) {
         state = AsyncValue.error(failure.message, StackTrace.current);
@@ -127,24 +114,31 @@ class LoginFormState extends AutoDisposeAsyncNotifier<void> {
 }
 
 @riverpod
-class RegisterFormState extends AutoDisposeAsyncNotifier<void> {
+class RegisterFormState extends AutoDisposeAsyncNotifier<User?> {
   @override
-  Future<void> build() async {
-    return;
+  Future<User?> build() async {
+    return null;
   }
-  
-  Future<void> register(String name, String email, String password) async {
+
+  Future<void> register(
+    String firstName,
+    String lastName,
+    String email,
+    String password,
+    String confirmPassword,
+  ) async {
     state = const AsyncValue.loading();
-    
-    final result = await ref.read(registerUseCaseProvider).call(name, email, password);
-    
+
+    final result = await ref
+        .read(registerUseCaseProvider)
+        .call(firstName, lastName, email, password, confirmPassword);
+
     result.fold(
       (failure) {
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
       (user) {
-        ref.read(authStateProvider.notifier).state = AsyncValue.data(user);
-        state = const AsyncValue.data(null);
+        state = AsyncValue.data(user);
       },
     );
   }
@@ -156,12 +150,12 @@ class ForgotPasswordFormState extends AutoDisposeAsyncNotifier<void> {
   Future<void> build() async {
     return;
   }
-  
+
   Future<void> forgotPassword(String email) async {
     state = const AsyncValue.loading();
-    
+
     final result = await ref.read(forgotPasswordUseCaseProvider).call(email);
-    
+
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
       (_) => const AsyncValue.data(null),
@@ -175,12 +169,14 @@ class ResetPasswordFormState extends AutoDisposeAsyncNotifier<void> {
   Future<void> build() async {
     return;
   }
-  
+
   Future<void> resetPassword(String token, String password) async {
     state = const AsyncValue.loading();
-    
-    final result = await ref.read(resetPasswordUseCaseProvider).call(token, password);
-    
+
+    final result = await ref
+        .read(resetPasswordUseCaseProvider)
+        .call(token, password);
+
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
       (_) => const AsyncValue.data(null),

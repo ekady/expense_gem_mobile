@@ -1,13 +1,13 @@
 import 'package:expense_gem_mobile/config/app_theme.dart';
-import 'package:expense_gem_mobile/config/env.dart';
 import 'package:expense_gem_mobile/config/router.dart';
+import 'package:expense_gem_mobile/config/env.dart';
 import 'package:expense_gem_mobile/core/services/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();  
   
   // Initialize environment variables
   await Env.init();

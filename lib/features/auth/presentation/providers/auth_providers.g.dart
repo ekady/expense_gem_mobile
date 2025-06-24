@@ -139,7 +139,7 @@ final isLoggedInUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef IsLoggedInUseCaseRef = AutoDisposeProviderRef<IsLoggedInUseCase>;
-String _$authStateHash() => r'ab72762d327a138b2aeb45620f8539b8aed0ff19';
+String _$authStateHash() => r'0b4e7b87fe5a6d3a9fd33de469d516ede5dce4e8';
 
 /// See also [AuthState].
 @ProviderFor(AuthState)
@@ -155,6 +155,7 @@ final authStateProvider =
       allTransitiveDependencies: null,
     );
 
+typedef _$AuthState = AutoDisposeAsyncNotifier<User?>;
 String _$loginFormStateHash() => r'50f65c9afe3f1edd60b44cec57eb0d6e427ff9b9';
 
 /// See also [LoginFormState].
@@ -171,12 +172,13 @@ final loginFormStateProvider =
       allTransitiveDependencies: null,
     );
 
-String _$registerFormStateHash() => r'daf56cb6d305641ef029cb4034a2795b5da673fb';
+typedef _$LoginFormState = AutoDisposeAsyncNotifier<void>;
+String _$registerFormStateHash() => r'4b180854c3d8f68feafaa6521465f4ec3de1e102';
 
 /// See also [RegisterFormState].
 @ProviderFor(RegisterFormState)
 final registerFormStateProvider =
-    AutoDisposeAsyncNotifierProvider<RegisterFormState, void>.internal(
+    AutoDisposeAsyncNotifierProvider<RegisterFormState, User?>.internal(
       RegisterFormState.new,
       name: r'registerFormStateProvider',
       debugGetCreateSourceHash:
@@ -187,6 +189,7 @@ final registerFormStateProvider =
       allTransitiveDependencies: null,
     );
 
+typedef _$RegisterFormState = AutoDisposeAsyncNotifier<User?>;
 String _$forgotPasswordFormStateHash() =>
     r'cf3e050aaa2a0eb7f3956cab03c072b644916d7e';
 
@@ -204,6 +207,7 @@ final forgotPasswordFormStateProvider =
       allTransitiveDependencies: null,
     );
 
+typedef _$ForgotPasswordFormState = AutoDisposeAsyncNotifier<void>;
 String _$resetPasswordFormStateHash() =>
     r'a2300460289c92801c937bbba018b127cd47edfc';
 
@@ -221,5 +225,6 @@ final resetPasswordFormStateProvider =
       allTransitiveDependencies: null,
     );
 
+typedef _$ResetPasswordFormState = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

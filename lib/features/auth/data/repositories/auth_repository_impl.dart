@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:expense_gem_mobile/core/entities/reponse_message.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user.dart';
@@ -33,13 +34,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
   
   @override
-  Future<Either<Failure, User>> register(String name, String email, String password) async {
+  Future<Either<Failure, User>> register(String firstName, String lastName, String email, String password, String confirmPassword) async {
     try {
-      final result = await remoteDataSource.register(name, email, password);
-      
-      await localDataSource.saveToken(result['token']);
-      await localDataSource.saveUser(result['user']);
-      
+      final result = await remoteDataSource.register(firstName, lastName, email, password, confirmPassword);
+            
       return Right(result['user']);
     } on DioException catch (e) {
       return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));

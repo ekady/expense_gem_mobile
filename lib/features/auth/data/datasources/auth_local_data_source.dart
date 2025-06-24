@@ -46,9 +46,10 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<void> saveUser(User user) async {
     final userJson = jsonEncode({
       'id': user.id,
-      'name': user.name,
+      'firstName': user.firstName,
+      'lastName': user.lastName,
       'email': user.email,
-      'avatar': user.avatar,
+      'picture': user.picture,
     });
     
     await sharedPreferences.setString('user_data', userJson);
@@ -66,9 +67,10 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     
     return User(
       id: userData['id'],
-      name: userData['name'],
+      firstName: userData['firstName'],
+      lastName: userData['lastName'],
       email: userData['email'],
-      avatar: userData['avatar'],
+      picture: userData['picture'],
     );
   }
   

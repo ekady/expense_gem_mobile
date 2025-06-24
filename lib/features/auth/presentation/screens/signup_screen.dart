@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../domain/entities/user.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/auth_button.dart';
@@ -17,7 +18,8 @@ class SignupScreen extends ConsumerStatefulWidget {
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -25,8 +27,61 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _obscureConfirmPassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    ref.listenManual<AsyncValue<User?>>(
+      registerFormStateProvider,
+      (previous, next) {
+        next.whenOrNull(
+          error: (error, _) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error.toString()),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          data: (user) {
+            if (mounted && user != null) {
+              // Clear form fields
+              _clearFormFields();
+              
+              // Show success message
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Registration successful, login to continue'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _clearFormFields() {
+    _firstNameController.clear();
+    _lastNameController.clear();
+    _emailController.clear();
+    _passwordController.clear();
+    _confirmPasswordController.clear();
+    setState(() {
+      _obscurePassword = true;
+      _obscureConfirmPassword = true;
+    });
+  }
+
+  @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -36,9 +91,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   void _register() {
     if (_formKey.currentState!.validate()) {
       ref.read(registerFormStateProvider.notifier).register(
-        _nameController.text.trim(),
+        _firstNameController.text.trim(),
+        _lastNameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
+        _confirmPasswordController.text,
       );
     }
   }
@@ -46,23 +103,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final registerFormState = ref.watch(registerFormStateProvider);
-    final isLoading = registerFormState is AsyncLoading<void>;
-
-    ref.listen<AsyncValue<void>>(registerFormStateProvider, (_, state) {
-      state.whenOrNull(
-        error: (error, stackTrace) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString()),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        },
-        data: (_) {
-          // On successful registration, user will be redirected automatically by router
-        },
-      );
-    });
+    final isLoading = registerFormState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -93,13 +134,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 32),
                   AuthTextField(
-                    controller: _nameController,
-                    label: 'Full Name',
-                    hint: 'Enter your full name',
+                    controller: _firstNameController,
+                    label: 'First Name',
+                    hint: 'Enter your first name',
                     icon: Icons.person_outline,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
+                        return 'Please enter your first name';
+                      }
+                      return null;
+                    },
+                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                  const SizedBox(height: 16),
+                  AuthTextField(
+                    controller: _lastNameController,
+                    label: 'Last Name',
+                    hint: 'Enter your last name',
+                    icon: Icons.person_outline,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your last name';
                       }
                       return null;
                     },

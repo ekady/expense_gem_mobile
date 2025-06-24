@@ -6,7 +6,7 @@ part of 'category_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$categoriesHash() => r'a3c742708472b29fea706625a8b5c882b0e8f40c';
+String _$categoriesHash() => r'cf249e481f73e5e666ec32d47499489a1be74c3c';
 
 /// See also [categories].
 @ProviderFor(categories)
@@ -22,7 +22,7 @@ final categoriesProvider = AutoDisposeFutureProvider<List<Category>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CategoriesRef = AutoDisposeFutureProviderRef<List<Category>>;
-String _$categoriesByTypeHash() => r'7ca8fa5082b1d2f3e807d915003e32033421fca4';
+String _$categoriesByTypeHash() => r'45d82f163caafb9b697563ec4b9769d3cee558f1';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -165,7 +165,7 @@ class _CategoriesByTypeProviderElement
   String get type => (origin as CategoriesByTypeProvider).type;
 }
 
-String _$categoryHash() => r'fa06e7c77401b5bcff0f9f316074d30553d0785c';
+String _$categoryHash() => r'10d6afd98656ccbba66c25c380c4a66cca3e81bf';
 
 /// See also [category].
 @ProviderFor(category)

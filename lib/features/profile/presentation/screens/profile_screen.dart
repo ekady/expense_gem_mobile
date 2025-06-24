@@ -19,7 +19,8 @@ class ProfileScreen extends ConsumerWidget {
         data: (users) {
           User? user = User(
             id: '1',
-            name: 'John Doe',
+            firstName: 'John',
+            lastName: 'Doe',
             email: 'john.doe@example.com',
           );
 
@@ -45,10 +46,10 @@ class ProfileScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 16),
-                          user.avatar != null && user.avatar!.isNotEmpty
+                          user.picture != null && user.picture!.isNotEmpty
                               ? CircleAvatar(
                                 radius: 40,
-                                backgroundImage: NetworkImage(user.avatar!),
+                                backgroundImage: NetworkImage(user.picture!),
                               )
                               : CircleAvatar(
                                 radius: 40,
@@ -61,7 +62,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                           const SizedBox(height: 12),
                           Text(
-                            user.name,
+                            '${user.firstName} ${user.lastName}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,

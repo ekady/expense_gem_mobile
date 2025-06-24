@@ -29,24 +29,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _login() async {
-    context.push('/dashboard');
-    // if (_formKey.currentState!.validate()) {
-    //   await ref.read(loginFormStateProvider.notifier).login(
-    //     _emailController.text.trim(),
-    //     _passwordController.text,
-    //   );
-    //   if (context.mounted && ref.read(authStateProvider).hasError) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text(ref.read(authStateProvider).error.toString()),
-    //         backgroundColor: Theme.of(context).colorScheme.error,
-    //       ),
-    //     );
-    //   }
-    //   if (mounted && ref.read(authStateProvider).hasValue) {
-    //     context.push('/dashboard');
-    //   }
-    // }
+    // context.push('/dashboard');
+    if (_formKey.currentState!.validate()) {
+      await ref.read(loginFormStateProvider.notifier).login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (mounted && ref.read(authStateProvider).hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ref.read(authStateProvider).error.toString()),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      if (mounted && ref.read(authStateProvider).hasValue) {
+        context.push('/dashboard');
+      }
+    }
   }
 
   @override
