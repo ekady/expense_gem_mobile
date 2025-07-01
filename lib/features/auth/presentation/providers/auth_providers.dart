@@ -11,6 +11,7 @@ import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/validate_otp_usecase.dart';
 
 part 'auth_providers.g.dart';
 
@@ -48,6 +49,11 @@ LogoutUseCase logoutUseCase(Ref ref) {
 @riverpod
 IsLoggedInUseCase isLoggedInUseCase(Ref ref) {
   return IsLoggedInUseCase(getIt<AuthRepository>());
+}
+
+@riverpod
+ValidateOtpUseCase validateOtpUseCase(Ref ref) {
+  return ValidateOtpUseCase(getIt<AuthRepository>());
 }
 
 // Auth State Provider
@@ -146,19 +152,48 @@ class RegisterFormState extends AutoDisposeAsyncNotifier<User?> {
 
 @riverpod
 class ForgotPasswordFormState extends AutoDisposeAsyncNotifier<void> {
+  String? _email;
+
   @override
   Future<void> build() async {
     return;
   }
 
-  Future<void> forgotPassword(String email) async {
+  Future<bool> forgotPassword(String email) async {
+    _email = email;
+    state = const AsyncLoading();
+    final forgotPasswordUsecase = ref.read(forgotPasswordUseCaseProvider);
+    final result = await forgotPasswordUsecase.call(email);
+    return result.fold(
+      (failure) {
+        state = AsyncError(failure.message, StackTrace.current);
+        return false;
+      },
+      (response) {
+        state = const AsyncData(null);
+        return true;
+      },
+    );
+  }
+
+  String? get email => _email;
+}
+
+@riverpod
+class ValidateOtpFormState extends AutoDisposeAsyncNotifier<String?> {
+  @override
+  Future<String?> build() async {
+    return null;
+  }
+
+  Future<void> validateOtp(String email, String otp) async {
     state = const AsyncValue.loading();
 
-    final result = await ref.read(forgotPasswordUseCaseProvider).call(email);
+    final result = await ref.read(validateOtpUseCaseProvider).call(email, otp);
 
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
-      (_) => const AsyncValue.data(null),
+      (token) => AsyncValue.data(token),
     );
   }
 }
@@ -170,16 +205,22 @@ class ResetPasswordFormState extends AutoDisposeAsyncNotifier<void> {
     return;
   }
 
-  Future<void> resetPassword(String token, String password) async {
+  Future<bool> resetPassword(String email, String token, String password) async {
     state = const AsyncValue.loading();
 
     final result = await ref
         .read(resetPasswordUseCaseProvider)
-        .call(token, password);
+        .call(email, token, password);
 
-    state = result.fold(
-      (failure) => AsyncValue.error(failure.message, StackTrace.current),
-      (_) => const AsyncValue.data(null),
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (_) {
+        state = const AsyncValue.data(null);
+        return true;
+      },
     );
   }
 }

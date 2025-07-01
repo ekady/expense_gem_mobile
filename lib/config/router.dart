@@ -1,5 +1,8 @@
 import 'package:expense_gem_mobile/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:expense_gem_mobile/features/auth/presentation/screens/otp_validation_screen.dart';
+import 'package:expense_gem_mobile/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:expense_gem_mobile/features/auth/presentation/screens/reset_password_success_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/signup_screen.dart';
 import 'package:expense_gem_mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:expense_gem_mobile/features/splash/presentation/screens/splash_screen.dart';
@@ -33,6 +36,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/otp-validation',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return OtpValidationScreen(email: extra['email']);
+        },
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ResetPasswordScreen(
+            email: extra['email'],
+            token: extra['token'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/reset-password-success',
+        builder: (context, state) => const ResetPasswordSuccessScreen(),
       ),
       
       // Main App Shell with Bottom Navigation

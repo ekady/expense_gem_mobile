@@ -8,7 +8,7 @@ class ResetPasswordUseCase {
   
   ResetPasswordUseCase(this.repository);
   
-  Future<Either<Failure, void>> call(String token, String password) {
-    return repository.resetPassword(token, password);
+  Future<Either<Failure, void>> call(String email, String token, String password) {
+    return repository.resetPassword(email, token, password);
   }
 }

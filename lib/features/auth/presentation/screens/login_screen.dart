@@ -20,6 +20,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _loginAttempted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    ref.listenManual<AsyncValue<void>>(
+      loginFormStateProvider,
+      (previous, next) async {
+        next.whenOrNull(
+          error: (error, _) {
+            if (mounted && _loginAttempted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error.toString()),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+            _loginAttempted = false;
+          },
+          data: (_) async {
+            if (!mounted) return;
+            // Check if user and token are available
+            final authState = ref.read(authStateProvider);
+            final user = authState.value;
+            if (user != null) {
+              context.go('/dashboard');
+            } else {
+              if (_loginAttempted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Login failed: user data not available.'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              }
+              _loginAttempted = false;
+            }
+          },
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -28,49 +75,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _login() async {
-    // context.push('/dashboard');
+  void _login() {
     if (_formKey.currentState!.validate()) {
-      await ref.read(loginFormStateProvider.notifier).login(
+      _loginAttempted = true;
+      ref.read(loginFormStateProvider.notifier).login(
         _emailController.text.trim(),
         _passwordController.text,
       );
-      if (mounted && ref.read(authStateProvider).hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ref.read(authStateProvider).error.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-      if (mounted && ref.read(authStateProvider).hasValue) {
-        context.push('/dashboard');
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final loginFormState = ref.watch(loginFormStateProvider);
-    final isLoading = loginFormState is AsyncLoading<void>;
-    
-    ref.listen<AsyncValue<void>>(loginFormStateProvider, (_, state) {
-      state.whenOrNull(
-        error: (error, stackTrace) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString()),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        },
-        data: (_) {
-          // On successful login, user will be redirected automatically by router
-        },
-      );
-    });
+    final isLoading = loginFormState.isLoading;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sign In'),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -81,11 +104,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const AnimatedLogo(),
-                  const SizedBox(height: 48),
+                  const AnimatedLogo(size: 80),
+                  const SizedBox(height: 32),
                   Text(
                     'Welcome Back',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ).animate().fadeIn().slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 8),
@@ -142,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        context.push('/forgot-password');
+                        context.go('/forgot-password');
                       },
                       child: const Text('Forgot Password?'),
                     ),
@@ -163,7 +186,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          context.push('/signup');
+                          context.go('/signup');
                         },
                         child: const Text('Sign Up'),
                       ),

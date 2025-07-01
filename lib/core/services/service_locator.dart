@@ -58,6 +58,15 @@ Future<void> setupServiceLocator() async {
     ),
   );
   
+  // Register AuthInterceptor for automatic token refresh and logout
+  getIt<Dio>().interceptors.add(
+    AuthInterceptor(
+      getIt<Dio>(),
+      getIt<AuthLocalDataSource>(),
+      getIt<AuthRemoteDataSource>(),
+    ),
+  );
+  
   // Repositories
   getIt.registerSingleton<AuthRepository>(
     AuthRepositoryImpl(

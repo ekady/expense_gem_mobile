@@ -7,8 +7,11 @@ import '../../domain/entities/user.dart';
 
 abstract class AuthLocalDataSource {
   Future<void> saveToken(String token);
+  Future<void> saveRefreshToken(String refreshToken);
   Future<String?> getToken();
   Future<void> deleteToken();
+  Future<String?> getRefreshToken();
+  Future<void> deleteRefreshToken();
   
   Future<void> saveUser(User user);
   Future<User?> getUser();
@@ -33,6 +36,11 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   }
   
   @override
+  Future<void> saveRefreshToken(String refreshToken) async {
+    await secureStorage.write(key: 'auth_refresh_token', value: refreshToken);
+  }
+  
+  @override
   Future<String?> getToken() async {
     return await secureStorage.read(key: 'auth_token');
   }
@@ -40,6 +48,16 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> deleteToken() async {
     await secureStorage.delete(key: 'auth_token');
+  }
+
+  @override
+  Future<String?> getRefreshToken() async {
+    return await secureStorage.read(key: 'auth_refresh_token');
+  }
+
+  @override
+  Future<void> deleteRefreshToken() async {
+    await secureStorage.delete(key: 'auth_refresh_token');
   }
   
   @override

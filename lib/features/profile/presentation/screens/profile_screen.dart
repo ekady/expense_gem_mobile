@@ -1,4 +1,3 @@
-import 'package:expense_gem_mobile/features/auth/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,13 +15,11 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       body: userAsync.when(
-        data: (users) {
-          User? user = User(
-            id: '1',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@example.com',
-          );
+        data: (user) {
+          if (user == null) {
+            context.go('/login');
+            return const SizedBox.shrink();
+          }
 
           return CustomScrollView(
             slivers: [
@@ -48,18 +45,18 @@ class ProfileScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
                           user.picture != null && user.picture!.isNotEmpty
                               ? CircleAvatar(
-                                radius: 40,
-                                backgroundImage: NetworkImage(user.picture!),
-                              )
+                                  radius: 40,
+                                  backgroundImage: NetworkImage(user.picture!),
+                                )
                               : CircleAvatar(
-                                radius: 40,
-                                backgroundColor: Colors.white,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: Theme.of(context).primaryColor,
+                                  radius: 40,
+                                  backgroundColor: Colors.white,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
                                 ),
-                              ),
                           const SizedBox(height: 12),
                           Text(
                             '${user.firstName} ${user.lastName}',
@@ -98,34 +95,34 @@ class ProfileScreen extends ConsumerWidget {
                         child: Column(
                           children: [
                             ProfileMenuItem(
-                                  icon: Icons.person_outline,
-                                  title: 'Personal Information',
-                                  onTap: () {
-                                    // Navigate to edit profile
-                                  },
-                                )
+                              icon: Icons.person_outline,
+                              title: 'Personal Information',
+                              onTap: () {
+                                // Navigate to edit profile
+                              },
+                            )
                                 .animate()
                                 .fadeIn(delay: 100.ms)
                                 .slideX(begin: 0.05, end: 0),
                             const Divider(height: 1),
                             ProfileMenuItem(
-                                  icon: Icons.lock_outline,
-                                  title: 'Change Password',
-                                  onTap: () {
-                                    // Navigate to change password
-                                  },
-                                )
+                              icon: Icons.lock_outline,
+                              title: 'Change Password',
+                              onTap: () {
+                                // Navigate to change password
+                              },
+                            )
                                 .animate()
                                 .fadeIn(delay: 150.ms)
                                 .slideX(begin: 0.05, end: 0),
                             const Divider(height: 1),
                             ProfileMenuItem(
-                                  icon: Icons.notifications_outlined,
-                                  title: 'Notifications',
-                                  onTap: () {
-                                    // Navigate to notifications settings
-                                  },
-                                )
+                              icon: Icons.notifications_outlined,
+                              title: 'Notifications',
+                              onTap: () {
+                                // Navigate to notifications settings
+                              },
+                            )
                                 .animate()
                                 .fadeIn(delay: 200.ms)
                                 .slideX(begin: 0.05, end: 0),
@@ -143,35 +140,35 @@ class ProfileScreen extends ConsumerWidget {
                         child: Column(
                           children: [
                             ProfileMenuItem(
-                                  icon: Icons.settings_outlined,
-                                  title: 'Settings',
-                                  onTap: () {
-                                    context.push('/profile/settings');
-                                  },
-                                )
+                              icon: Icons.settings_outlined,
+                              title: 'Settings',
+                              onTap: () {
+                                context.push('/profile/settings');
+                              },
+                            )
                                 .animate()
                                 .fadeIn(delay: 250.ms)
                                 .slideX(begin: 0.05, end: 0),
                             const Divider(height: 1),
                             ProfileMenuItem(
-                                  icon: Icons.currency_exchange,
-                                  title: 'Currency',
-                                  subtitle: 'USD',
-                                  onTap: () {
-                                    // Navigate to currency settings
-                                  },
-                                )
+                              icon: Icons.currency_exchange,
+                              title: 'Currency',
+                              subtitle: 'USD',
+                              onTap: () {
+                                // Navigate to currency settings
+                              },
+                            )
                                 .animate()
                                 .fadeIn(delay: 300.ms)
                                 .slideX(begin: 0.05, end: 0),
                             const Divider(height: 1),
                             ProfileMenuItem(
-                                  icon: Icons.help_outline,
-                                  title: 'Help & Support',
-                                  onTap: () {
-                                    // Navigate to help & support
-                                  },
-                                )
+                              icon: Icons.help_outline,
+                              title: 'Help & Support',
+                              onTap: () {
+                                // Navigate to help & support
+                              },
+                            )
                                 .animate()
                                 .fadeIn(delay: 350.ms)
                                 .slideX(begin: 0.05, end: 0),
@@ -180,21 +177,19 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
                       Card(
-                            child: ProfileMenuItem(
-                              icon: Icons.logout,
-                              title: 'Logout',
-                              iconColor: Theme.of(context).colorScheme.error,
-                              textColor: Theme.of(context).colorScheme.error,
-                              onTap: () async {
-                                await ref
-                                    .read(authStateProvider.notifier)
-                                    .logout();
-                                if (context.mounted) {
-                                  context.go('/login');
-                                }
-                              },
-                            ),
-                          )
+                        child: ProfileMenuItem(
+                          icon: Icons.logout,
+                          title: 'Logout',
+                          iconColor: Theme.of(context).colorScheme.error,
+                          textColor: Theme.of(context).colorScheme.error,
+                          onTap: () async {
+                            await ref.read(authStateProvider.notifier).logout();
+                            if (context.mounted) {
+                              context.go('/login');
+                            }
+                          },
+                        ),
+                      )
                           .animate()
                           .fadeIn(delay: 400.ms)
                           .slideX(begin: 0.05, end: 0),

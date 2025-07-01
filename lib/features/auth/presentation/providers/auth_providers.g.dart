@@ -139,6 +139,26 @@ final isLoggedInUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef IsLoggedInUseCaseRef = AutoDisposeProviderRef<IsLoggedInUseCase>;
+String _$validateOtpUseCaseHash() =>
+    r'c1aec792fb8bc96fde46420583dc6c6e3bebc060';
+
+/// See also [validateOtpUseCase].
+@ProviderFor(validateOtpUseCase)
+final validateOtpUseCaseProvider =
+    AutoDisposeProvider<ValidateOtpUseCase>.internal(
+      validateOtpUseCase,
+      name: r'validateOtpUseCaseProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$validateOtpUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ValidateOtpUseCaseRef = AutoDisposeProviderRef<ValidateOtpUseCase>;
 String _$authStateHash() => r'0b4e7b87fe5a6d3a9fd33de469d516ede5dce4e8';
 
 /// See also [AuthState].
@@ -191,7 +211,7 @@ final registerFormStateProvider =
 
 typedef _$RegisterFormState = AutoDisposeAsyncNotifier<User?>;
 String _$forgotPasswordFormStateHash() =>
-    r'cf3e050aaa2a0eb7f3956cab03c072b644916d7e';
+    r'3ebfc6024e6ffb6bc1951efb36333d211d474df5';
 
 /// See also [ForgotPasswordFormState].
 @ProviderFor(ForgotPasswordFormState)
@@ -208,8 +228,26 @@ final forgotPasswordFormStateProvider =
     );
 
 typedef _$ForgotPasswordFormState = AutoDisposeAsyncNotifier<void>;
+String _$validateOtpFormStateHash() =>
+    r'7bad2233dafce24fb2a3331eb737495e85e6279b';
+
+/// See also [ValidateOtpFormState].
+@ProviderFor(ValidateOtpFormState)
+final validateOtpFormStateProvider =
+    AutoDisposeAsyncNotifierProvider<ValidateOtpFormState, String?>.internal(
+      ValidateOtpFormState.new,
+      name: r'validateOtpFormStateProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$validateOtpFormStateHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$ValidateOtpFormState = AutoDisposeAsyncNotifier<String?>;
 String _$resetPasswordFormStateHash() =>
-    r'a2300460289c92801c937bbba018b127cd47edfc';
+    r'05ec57fdaa2d242319d95029d07c752028837422';
 
 /// See also [ResetPasswordFormState].
 @ProviderFor(ResetPasswordFormState)

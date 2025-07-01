@@ -14,8 +14,11 @@ abstract class AuthRemoteDataSource {
     String confirmPassword,
   );
   Future<void> forgotPassword(String email);
-  Future<void> resetPassword(String token, String password);
+  Future<String> validateOtp(String email, String otp);
+  Future<void> resetPassword(String email, String token, String password);
   Future<User> getUserProfile();
+  Future<Map<String, dynamic>> refreshToken(String refreshToken);
+  Future<void> logout();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -32,14 +35,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {'email': email, 'password': password},
       );
 
+      final responseData = response.data['data'];
+
       return {
-        'token': response.data['token'],
+        'token': responseData['accessToken'],
+        'refreshToken': responseData['refreshToken'],
         'user': User(
-          id: response.data['user']['id'],
-          firstName: response.data['user']['firstName'],
-          lastName: response.data['user']['lastName'],
-          email: response.data['user']['email'],
-          picture: response.data['user']['picture'],
+          id: responseData['user']['id'],
+          firstName: responseData['user']['firstName'],
+          lastName: responseData['user']['lastName'],
+          email: responseData['user']['email'],
+          picture: responseData['user']['picture'],
         ),
       };
     } on DioException catch (e) {
@@ -92,7 +98,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> forgotPassword(String email) async {
     try {
-      await dio.post('/auth/forgot-password', data: {'email': email});
+      await dio.post('/authentication/forgot-password', data: {'email': email});
     } on DioException catch (e) {
       logger.e('Forgot password error: ${e.message}');
       throw _handleDioError(e);
@@ -103,11 +109,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> resetPassword(String token, String password) async {
+  Future<String> validateOtp(String email, String otp) async {
+    try {
+      final response = await dio.post(
+        '/authentication/validate-otp',
+        data: {'email': email, 'otp': otp},
+      );
+      return response.data['data']['resetToken'];
+    } on DioException catch (e) {
+      logger.e('OTP validation error: ${e.message}');
+      throw _handleDioError(e);
+    } catch (e) {
+      logger.e('Unexpected OTP validation error: $e');
+      throw Exception('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String email, String token, String password) async {
     try {
       await dio.post(
-        '/auth/reset-password',
-        data: {'token': token, 'password': password},
+        '/authentication/reset-password',
+        data: {
+          'email': email,
+          'resetToken': token,
+          'newPassword': password,
+        },
       );
     } on DioException catch (e) {
       logger.e('Reset password error: ${e.message}');
@@ -121,7 +148,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<User> getUserProfile() async {
     try {
-      final response = await dio.get('/auth/profile');
+      final response = await dio.get('/user/me');
 
       return User(
         id: response.data['id'],
@@ -154,6 +181,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
     } else if (e.response != null) {
       final statusCode = e.response!.statusCode;
+      print(e.response!.data);
       final responseData =
           e.response!.data?['errors']?[0] as Map<String, dynamic>?;
 
@@ -176,6 +204,46 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } else {
       return CustomException('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
+    try {
+      final response = await dio.post(
+        '/authentication/refresh-token',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $refreshToken',
+          },
+        ),
+      );
+      final data = response.data['data'];
+      return {
+        'token': data['accessToken'],
+        'refreshToken': data['refreshToken'],
+      };
+    } on DioException catch (e) {
+      logger.e('Refresh token error: ${e.message}');
+      throw _handleDioError(e);
+    } catch (e) {
+      logger.e('Unexpected refresh token error: $e');
+      throw Exception('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await dio.post(
+        '/authentication/sign-out',
+      );
+    } on DioException catch (e) {
+      logger.e('Logout error: ${e.message}');
+      throw _handleDioError(e);
+    } catch (e) {
+      logger.e('Unexpected logout error: $e');
+      throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 }

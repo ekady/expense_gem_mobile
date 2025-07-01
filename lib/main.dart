@@ -2,27 +2,26 @@ import 'package:expense_gem_mobile/config/app_theme.dart';
 import 'package:expense_gem_mobile/config/router.dart';
 import 'package:expense_gem_mobile/config/env.dart';
 import 'package:expense_gem_mobile/core/services/service_locator.dart';
+import 'package:expense_gem_mobile/features/auth/domain/entities/user.dart';
+import 'package:expense_gem_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();  
-  
+  WidgetsFlutterBinding.ensureInitialized();
+
   // Initialize environment variables
   await Env.init();
-  
+
   // Initialize Hive
   await Hive.initFlutter();
-  
+
   // Initialize service locator
   await setupServiceLocator();
-  
-  runApp(
-    const ProviderScope(
-      child: ExpenseTrackerApp(),
-    ),
-  );
+
+  runApp(const ProviderScope(child: ExpenseTrackerApp()));
 }
 
 class ExpenseTrackerApp extends ConsumerWidget {
@@ -32,7 +31,13 @@ class ExpenseTrackerApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final appRouter = ref.watch(appRouterProvider);
-    
+
+    ref.listen<AsyncValue<User?>>(authStateProvider, (_, next) {
+      if (next.value == null) {
+        context.go('/login');
+      }
+    });
+
     return MaterialApp.router(
       title: 'Expense Gem',
       debugShowCheckedModeBanner: false,

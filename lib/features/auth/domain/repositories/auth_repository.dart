@@ -12,9 +12,11 @@ abstract class AuthRepository {
     String password,
     String confirmPassword,
   );
-  Future<Either<Failure, void>> forgotPassword(String email);
-  Future<Either<Failure, void>> resetPassword(String token, String password);
+  Future<Either<Failure, bool>> forgotPassword(String email);
+  Future<Either<Failure, String>> validateOtp(String email, String otp);
+  Future<Either<Failure, bool>> resetPassword(String email, String token, String password);
   Future<Either<Failure, User>> getCurrentUser();
   Future<Either<Failure, void>> logout();
+  Future<Either<Failure, void>> refreshToken();
   Future<bool> isLoggedIn();
 }
