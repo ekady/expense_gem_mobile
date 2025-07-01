@@ -211,7 +211,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
     try {
       final response = await dio.post(
-        '/authentication/refresh-token',
+        '/authentication/refresh',
         options: Options(
           headers: {
             'Authorization': 'Bearer $refreshToken',

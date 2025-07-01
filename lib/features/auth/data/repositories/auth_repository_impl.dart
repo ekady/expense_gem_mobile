@@ -189,7 +189,10 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor(this.dio, this.localDataSource, this.remoteDataSource);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await localDataSource.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -199,25 +202,25 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
+    try {
       final refreshToken = await localDataSource.getRefreshToken();
-      if (refreshToken != null) {
-        try {
-          final result = await remoteDataSource.refreshToken(refreshToken);
-          await localDataSource.saveToken(result['token']);
-          await localDataSource.saveRefreshToken(result['refreshToken']);
-          // Retry original request
-          final opts = err.requestOptions;
-          opts.headers['Authorization'] = 'Bearer ${result['token']}';
-          final cloneReq = await dio.fetch(opts);
-          return handler.resolve(cloneReq);
-        } catch (e) {
-          // Refresh failed, force logout
-          await localDataSource.deleteToken();
-          await localDataSource.deleteRefreshToken();
-          await localDataSource.deleteUser();
-        }
+
+      if (err.response?.statusCode == 401 && refreshToken != null) {
+        await localDataSource.deleteToken();
+      
+        final result = await remoteDataSource.refreshToken(refreshToken);
+        await localDataSource.saveToken(result['token']);
+        await localDataSource.saveRefreshToken(result['refreshToken']);
+        // Retry original request
+        final opts = err.requestOptions;
+        final cloneReq = await dio.fetch(opts);
+        return handler.resolve(cloneReq);
       }
+    } catch (e) {
+      // When refresh fails, delete both tokens to force re-login
+      await localDataSource.deleteToken();
+      await localDataSource.deleteRefreshToken();
+      await localDataSource.deleteUser();
     }
     handler.next(err);
   }
