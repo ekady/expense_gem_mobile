@@ -3,18 +3,104 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/utils/currency_formatter.dart';
 import '../providers/account_providers.dart';
 import '../widgets/account_item.dart';
 
-class AccountsScreen extends ConsumerWidget {
+class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(accountsProvider);
+  ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
+}
 
-    return Scaffold(
+class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBindingObserver {
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addObserver(this);
+    
+    // Add focus listener to refresh when screen gains focus
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus && mounted) {
+        // Small delay to ensure navigation is complete
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _focusNode.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh accounts when dependencies change (e.g., when returning to screen)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh when app becomes active again
+    if (state == AppLifecycleState.resumed && mounted) {
+      ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+    }
+  }
+
+  void _onScroll() {
+    if (_isLoadingMore) return; // Prevent multiple calls while loading
+    
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      final accountsState = ref.read(accountsInfiniteScrollProvider.notifier);
+      if (accountsState.hasMoreData) {
+        setState(() {
+          _isLoadingMore = true;
+        });
+        
+        accountsState.loadNextPage().then((_) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMore = false;
+            });
+          }
+        }).catchError((_) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMore = false;
+            });
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accountsAsync = ref.watch(accountsInfiniteScrollProvider);
+
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Your Accounts'),
         actions: [
@@ -27,7 +113,7 @@ class AccountsScreen extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(accountsProvider.future),
+        onRefresh: () => ref.read(accountsInfiniteScrollProvider.notifier).refresh(),
         child: accountsAsync.when(
           data: (accounts) {
             if (accounts.isEmpty) {
@@ -38,9 +124,7 @@ class AccountsScreen extends ConsumerWidget {
                     Icon(
                       Icons.account_balance_wallet_outlined,
                       size: 80,
-                      color: Theme.of(
-                        context,
-                      ).primaryColor.withValues(alpha: 0.5),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -65,95 +149,73 @@ class AccountsScreen extends ConsumerWidget {
               );
             }
 
-            // Calculate total balance
-            final totalBalance = accounts.fold(
-              0.0,
-              (previousValue, account) => previousValue + account.balance,
-            );
-
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).primaryColor.withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+            return ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: accounts.length + 1, // +1 for loading indicator
+              itemBuilder: (context, index) {
+                if (index == accounts.length) {
+                  // Show loading indicator at the bottom
+                  final accountsState = ref.read(accountsInfiniteScrollProvider.notifier);
+                  if (accountsState.hasMoreData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(
+                        child: CircularProgressIndicator(),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Balance',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            CurrencyFormatter.format(totalBalance),
-                            style: Theme.of(
-                              context,
-                            ).textTheme.headlineSmall?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Across ${accounts.length} account${accounts.length > 1 ? 's' : ''}',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final account = accounts[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: AccountItem(
-                        account: account,
-                        onTap: () {
-                          context.push('/accounts/edit/${account.id}');
-                        },
-                      ),
-                    ).animate().fadeIn(
-                      delay: Duration(milliseconds: 100 * index),
                     );
-                  }, childCount: accounts.length),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 80)),
-              ],
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                }
+
+                final account = accounts[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AccountItem(
+                    account: account,
+                    onTap: () {
+                      context.push('/accounts/edit/${account.id}');
+                    },
+                  ),
+                );
+              },
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) => Center(child: Text('Error: $error')),
+          error: (error, stackTrace) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 80,
+                  color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading accounts',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-    );
+    ));
   }
 }
 

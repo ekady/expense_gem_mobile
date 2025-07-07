@@ -3,22 +3,18 @@ import 'package:equatable/equatable.dart';
 class Account extends Equatable {
   final String id;
   final String name;
-  final double balance;
-  final String type;
+  final String? description;
   final String? icon;
-  final String? colorHex;
-  final bool isActive;
+  final String? color;
   final DateTime createdAt;
   final DateTime? updatedAt;
   
   const Account({
     required this.id,
     required this.name,
-    required this.balance,
-    required this.type,
+    this.description,
     this.icon,
-    this.colorHex,
-    this.isActive = true,
+    this.color,
     required this.createdAt,
     this.updatedAt,
   });
@@ -26,22 +22,18 @@ class Account extends Equatable {
   Account copyWith({
     String? id,
     String? name,
-    double? balance,
-    String? type,
+    String? description,
     String? icon,
-    String? colorHex,
-    bool? isActive,
+    String? color,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Account(
       id: id ?? this.id,
       name: name ?? this.name,
-      balance: balance ?? this.balance,
-      type: type ?? this.type,
+      description: description ?? this.description,
       icon: icon ?? this.icon,
-      colorHex: colorHex ?? this.colorHex,
-      isActive: isActive ?? this.isActive,
+      color: color ?? this.color,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -51,11 +43,9 @@ class Account extends Equatable {
   List<Object?> get props => [
     id, 
     name, 
-    balance, 
-    type, 
+    description,
     icon, 
-    colorHex, 
-    isActive, 
+    color, 
     createdAt, 
     updatedAt,
   ];

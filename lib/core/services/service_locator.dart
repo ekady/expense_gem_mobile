@@ -1,3 +1,5 @@
+import 'package:expense_gem_mobile/features/accounts/data/datasources/account_local_data_source.dart';
+import 'package:expense_gem_mobile/features/accounts/data/datasources/account_remote_data_source.dart';
 import 'package:expense_gem_mobile/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:expense_gem_mobile/features/accounts/domain/repositories/account_repository.dart';
 import 'package:expense_gem_mobile/features/auth/data/datasources/auth_local_data_source.dart';
@@ -43,7 +45,7 @@ Future<void> setupServiceLocator() async {
     headers: {'Content-Type': 'application/json; charset=UTF-8'},
   )));
   
-  // Data sources
+  // Auth Data sources
   getIt.registerSingleton<AuthLocalDataSource>(
     AuthLocalDataSourceImpl(
       secureStorage: getIt<FlutterSecureStorage>(),
@@ -53,6 +55,20 @@ Future<void> setupServiceLocator() async {
   
   getIt.registerSingleton<AuthRemoteDataSource>(
     AuthRemoteDataSourceImpl(
+      dio: getIt<Dio>(),
+      logger: getIt<Logger>(),
+    ),
+  );
+  
+  // Account Data sources
+  getIt.registerSingleton<AccountLocalDataSource>(
+    AccountLocalDataSourceImpl(
+      sharedPreferences: getIt<SharedPreferences>(),
+    ),
+  );
+  
+  getIt.registerSingleton<AccountRemoteDataSource>(
+    AccountRemoteDataSourceImpl(
       dio: getIt<Dio>(),
       logger: getIt<Logger>(),
     ),
@@ -76,7 +92,10 @@ Future<void> setupServiceLocator() async {
   );
   
   getIt.registerSingleton<AccountRepository>(
-    AccountRepositoryImpl(),
+    AccountRepositoryImpl(
+      remoteDataSource: getIt<AccountRemoteDataSource>(),
+      localDataSource: getIt<AccountLocalDataSource>(),
+    ),
   );
   
   getIt.registerSingleton<CategoryRepository>(

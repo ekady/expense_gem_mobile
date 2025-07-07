@@ -181,7 +181,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
     } else if (e.response != null) {
       final statusCode = e.response!.statusCode;
-      print(e.response!.data);
       final responseData =
           e.response!.data?['errors']?[0] as Map<String, dynamic>?;
 

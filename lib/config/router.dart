@@ -1,3 +1,4 @@
+import 'package:expense_gem_mobile/features/accounts/presentation/screens/account_form_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/otp_validation_screen.dart';
@@ -213,25 +214,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
-    );
-  }
-}
-
-// These are referenced in the router but defined in separate files
-class AccountFormScreen extends StatelessWidget {
-  final String? accountId;
-  
-  const AccountFormScreen({super.key, this.accountId});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(accountId == null ? 'Create Account' : 'Edit Account'),
-      ),
-      body: const Center(
-        child: Text('Account Form'),
-      ),
     );
   }
 }
