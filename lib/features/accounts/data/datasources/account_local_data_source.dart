@@ -98,8 +98,8 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
       'description': account.description,
       'icon': account.icon,
       'color': account.color,
-      'createdAt': account.createdAt.toIso8601String(),
-      'updatedAt': account.updatedAt?.toIso8601String(),
+      if (account.createdAt != null) 'createdAt': account.createdAt!.toIso8601String(),
+      if (account.updatedAt != null) 'updatedAt': account.updatedAt!.toIso8601String(),
     };
   }
   
@@ -110,7 +110,9 @@ class AccountLocalDataSourceImpl implements AccountLocalDataSource {
       description: json['description'],
       icon: json['icon'],
       color: json['color'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt']) 
+          : null,
       updatedAt: json['updatedAt'] != null 
           ? DateTime.parse(json['updatedAt']) 
           : null,

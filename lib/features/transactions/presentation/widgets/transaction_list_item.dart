@@ -41,7 +41,7 @@ class TransactionListItem extends ConsumerWidget {
                 data: (category) {
                   Color categoryColor = Theme.of(context).primaryColor;
                   try {
-                    final hexCode = category.colorHex.replaceFirst('#', '');
+                    final hexCode = category.color.replaceFirst('#', '');
                     categoryColor = Color(int.parse('FF$hexCode', radix: 16));
                   } catch (e) {
                     // Use default if parsing fails

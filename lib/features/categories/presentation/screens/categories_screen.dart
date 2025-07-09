@@ -14,122 +14,171 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+    with WidgetsBindingObserver {
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only refresh once when the screen is first loaded
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.invalidate(categoriesProvider);
+        }
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Only refresh when app becomes active and we have initialized
+    if (state == AppLifecycleState.resumed && mounted && _hasInitialized) {
+      // Add a small delay to avoid immediate refresh on app resume
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          ref.invalidate(categoriesProvider);
+        }
+      });
+    }
+  }
+
+  // Method to refresh categories when returning from form screens
+  void _refreshOnReturn() {
+    if (mounted && _hasInitialized) {
+      ref.invalidate(categoriesProvider);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categories'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/categories/create');
+            onPressed: () async {
+              await context.push('/categories/create');
+              _refreshOnReturn();
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [Tab(text: 'Expense'), Tab(text: 'Income')],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(categoriesProvider);
+        },
+        child: categoriesAsync.when(
+          data: (categories) {
+            if (categories.isEmpty) {
+              return _buildEmptyState();
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: CategoryListItem(
+                    category: category,
+                    onTap: () async {
+                      await context.push('/categories/edit/${category.id}');
+                      _refreshOnReturn();
+                    },
+                  ),
+                ).animate().fadeIn(
+                  delay: Duration(milliseconds: 100 * index),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 80,
+                  color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading categories',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.invalidate(categoriesProvider);
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_buildCategoryList('expense'), _buildCategoryList('income')],
-      ),
     );
   }
 
-  Widget _buildCategoryList(String type) {
-    final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
-
-    return RefreshIndicator(
-      onRefresh: () => ref.refresh(categoriesProvider.future),
-      child: categoriesAsync.when(
-        data: (categories) {
-          if (categories.isEmpty) {
-            return _buildEmptyState(type);
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: CategoryListItem(
-                      category: category,
-                      onTap: () {
-                        context.push('/categories/edit/${category.id}');
-                      },
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(delay: Duration(milliseconds: 50 * index))
-                  .slideX(begin: 0.05, end: 0);
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(child: Text('Error: $error')),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(String type) {
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            type == 'expense'
-                ? Icons.category_outlined
-                : Icons.vertical_align_top,
+            Icons.category_outlined,
             size: 80,
             color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
-            'No ${type.capitalize()} Categories',
+            'No Categories Yet',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap the + button to add your first $type category',
+            'Tap the + button to add your first category',
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () {
-              context.push('/categories/create');
+            onPressed: () async {
+              await context.push('/categories/create');
+              _refreshOnReturn();
             },
             icon: const Icon(Icons.add),
-            label: Text('Add ${type.capitalize()} Category'),
+            label: const Text('Add Category'),
           ),
         ],
       ),
     ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9));
-  }
-}
-
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

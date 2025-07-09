@@ -3,41 +3,37 @@ import 'package:equatable/equatable.dart';
 class Category extends Equatable {
   final String id;
   final String name;
+  final String? description;
   final String icon;
-  final String colorHex;
-  final String type; // 'expense' or 'income'
-  final bool isDefault;
-  final DateTime createdAt;
+  final String color;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
   
   const Category({
     required this.id,
     required this.name,
+    this.description,
     required this.icon,
-    required this.colorHex,
-    required this.type,
-    this.isDefault = false,
-    required this.createdAt,
+    required this.color,
+    this.createdAt,
     this.updatedAt,
   });
   
   Category copyWith({
     String? id,
     String? name,
+    String? description,
     String? icon,
-    String? colorHex,
-    String? type,
-    bool? isDefault,
+    String? color,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Category(
       id: id ?? this.id,
       name: name ?? this.name,
+      description: description ?? this.description,
       icon: icon ?? this.icon,
-      colorHex: colorHex ?? this.colorHex,
-      type: type ?? this.type,
-      isDefault: isDefault ?? this.isDefault,
+      color: color ?? this.color,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -47,10 +43,9 @@ class Category extends Equatable {
   List<Object?> get props => [
     id,
     name,
+    description,
     icon,
-    colorHex,
-    type,
-    isDefault,
+    color,
     createdAt,
     updatedAt,
   ];

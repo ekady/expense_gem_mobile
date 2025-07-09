@@ -4,19 +4,45 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/services/service_locator.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
+import '../../domain/usecases/create_category_usecase.dart';
+import '../../domain/usecases/delete_category_usecase.dart';
+import '../../domain/usecases/get_category_by_id_usecase.dart';
+import '../../domain/usecases/get_categories_usecase.dart';
+import '../../domain/usecases/update_category_usecase.dart';
 
 part 'category_providers.g.dart';
 
-// Repository provider
-final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
-  return getIt<CategoryRepository>();
-});
+// Use Cases Providers
+@riverpod
+GetCategoriesUseCase getCategoriesUseCase(Ref ref) {
+  return GetCategoriesUseCase(getIt<CategoryRepository>());
+}
+
+@riverpod
+GetCategoryByIdUseCase getCategoryByIdUseCase(Ref ref) {
+  return GetCategoryByIdUseCase(getIt<CategoryRepository>());
+}
+
+@riverpod
+CreateCategoryUseCase createCategoryUseCase(Ref ref) {
+  return CreateCategoryUseCase(getIt<CategoryRepository>());
+}
+
+@riverpod
+UpdateCategoryUseCase updateCategoryUseCase(Ref ref) {
+  return UpdateCategoryUseCase(getIt<CategoryRepository>());
+}
+
+@riverpod
+DeleteCategoryUseCase deleteCategoryUseCase(Ref ref) {
+  return DeleteCategoryUseCase(getIt<CategoryRepository>());
+}
 
 // All categories provider
 @riverpod
 Future<List<Category>> categories(Ref ref) async {
-  final repository = ref.watch(categoryRepositoryProvider);
-  final result = await repository.getCategories();
+  final useCase = ref.watch(getCategoriesUseCaseProvider);
+  final result = await useCase.call();
 
   return result.fold(
     (failure) => throw failure.message,
@@ -24,23 +50,23 @@ Future<List<Category>> categories(Ref ref) async {
   );
 }
 
-// Categories by type provider
+// Categories by type provider (deprecated - type field removed)
 @riverpod
 Future<List<Category>> categoriesByType(Ref ref, String type) async {
-  final repository = ref.watch(categoryRepositoryProvider);
-  final result = await repository.getCategoriesByType(type);
+  final useCase = ref.watch(getCategoriesUseCaseProvider);
+  final result = await useCase.call();
 
   return result.fold(
     (failure) => throw failure.message,
-    (categories) => categories,
+    (categories) => categories, // Return all categories since type is no longer a field
   );
 }
 
 // Single category provider
 @riverpod
 Future<Category> category(Ref ref, String id) async {
-  final repository = ref.watch(categoryRepositoryProvider);
-  final result = await repository.getCategoryById(id);
+  final useCase = ref.watch(getCategoryByIdUseCaseProvider);
+  final result = await useCase.call(id);
 
   return result.fold(
     (failure) => throw failure.message,
@@ -55,6 +81,7 @@ class CategoryFormState extends _$CategoryFormState {
   AsyncValue<Category?> build([String? categoryId]) {
     if (categoryId != null) {
       _loadCategory(categoryId);
+      return const AsyncValue.loading();
     }
     return const AsyncValue.data(null);
   }
@@ -62,8 +89,8 @@ class CategoryFormState extends _$CategoryFormState {
   Future<void> _loadCategory(String id) async {
     state = const AsyncValue.loading();
 
-    final repository = ref.read(categoryRepositoryProvider);
-    final result = await repository.getCategoryById(id);
+    final useCase = ref.read(getCategoryByIdUseCaseProvider);
+    final result = await useCase.call(id);
 
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
@@ -74,17 +101,16 @@ class CategoryFormState extends _$CategoryFormState {
   Future<void> saveCategory(Category category) async {
     state = const AsyncValue.loading();
 
-    final repository = ref.read(categoryRepositoryProvider);
-    final result =
-        category.id.isEmpty
-            ? await repository.createCategory(category)
-            : await repository.updateCategory(category);
+    final result = category.id.isEmpty
+        ? await ref.read(createCategoryUseCaseProvider).call(category)
+        : await ref.read(updateCategoryUseCaseProvider).call(category);
 
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
       (savedCategory) {
+        // Invalidate and refresh all category-related providers
         ref.invalidate(categoriesProvider);
-        ref.invalidate(categoriesByTypeProvider(category.type));
+        
         return AsyncValue.data(savedCategory);
       },
     );
@@ -93,19 +119,17 @@ class CategoryFormState extends _$CategoryFormState {
   Future<void> deleteCategory(String id) async {
     state = const AsyncValue.loading();
 
-    // First get the category to know its type
-    final categoryType = state.value?.type ?? 'expense';
-
-    final repository = ref.read(categoryRepositoryProvider);
-    final result = await repository.deleteCategory(id);
+    final useCase = ref.read(deleteCategoryUseCaseProvider);
+    final result = await useCase.call(id);
 
     result.fold(
       (failure) {
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
       (_) {
+        // Invalidate and refresh all category-related providers
         ref.invalidate(categoriesProvider);
-        ref.invalidate(categoriesByTypeProvider(categoryType));
+        
         state = const AsyncValue.data(null);
       },
     );

@@ -3,119 +3,119 @@ import 'package:logger/logger.dart';
 
 import '../../../../core/entities/pagination.dart';
 import '../../../../core/error/custom_exception.dart';
-import '../../domain/entities/account.dart';
+import '../../domain/entities/category.dart';
 
-abstract class AccountRemoteDataSource {
-  Future<Map<String, dynamic>> getAccounts({int page = 1, int limit = 10});
-  Future<Account> getAccountById(String id);
-  Future<Account> createAccount(Account account);
-  Future<Account> updateAccount(Account account);
-  Future<void> deleteAccount(String id);
+abstract class CategoryRemoteDataSource {
+  Future<Map<String, dynamic>> getCategories({int page = 1, int limit = 10});
+  Future<Category> getCategoryById(String id);
+  Future<Category> createCategory(Category category);
+  Future<Category> updateCategory(Category category);
+  Future<void> deleteCategory(String id);
 }
 
-class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
+class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   final Dio dio;
   final Logger logger;
 
-  AccountRemoteDataSourceImpl({required this.dio, required this.logger});
+  CategoryRemoteDataSourceImpl({required this.dio, required this.logger});
 
   @override
-  Future<Map<String, dynamic>> getAccounts({int page = 1, int limit = 10}) async {
+  Future<Map<String, dynamic>> getCategories({int page = 1, int limit = 10}) async {
     try {
-      final response = await dio.get('/account', queryParameters: {
+      final response = await dio.get('/categories', queryParameters: {
         'page': page,
         'limit': limit,
         'sort': 'createdAt|desc',
       });
       
       final data = response.data['data'];
-      final List<dynamic> accountsData = data['data'];
+      final List<dynamic> categoriesData = data['data'];
       final paginationData = data['pagination'];
       
-      final accounts = accountsData.map((json) => _accountFromJson(json)).toList();
+      final categories = categoriesData.map((json) => _categoryFromJson(json)).toList();
       final pagination = Pagination.fromJson(paginationData);
       
       return {
-        'accounts': accounts,
+        'categories': categories,
         'pagination': pagination,
       };
     } on DioException catch (e) {
-      logger.e('Get accounts error: ${e.message}');
+      logger.e('Get categories error: ${e.message}');
       throw _handleDioError(e);
     } catch (e) {
-      logger.e('Unexpected get accounts error: $e');
+      logger.e('Unexpected get categories error: $e');
       throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 
   @override
-  Future<Account> getAccountById(String id) async {
+  Future<Category> getCategoryById(String id) async {
     try {
-      final response = await dio.get('/account/$id');
-      return _accountFromJson(response.data['data']);
+      final response = await dio.get('/categories/$id');
+      return _categoryFromJson(response.data['data']);
     } on DioException catch (e) {
-      logger.e('Get account by id error: ${e.message}');
+      logger.e('Get category by id error: ${e.message}');
       throw _handleDioError(e);
     } catch (e) {
-      logger.e('Unexpected get account by id error: $e');
+      logger.e('Unexpected get category by id error: $e');
       throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 
   @override
-  Future<Account> createAccount(Account account) async {
+  Future<Category> createCategory(Category category) async {
     try {
       final response = await dio.post(
-        '/account',
-        data: _accountToJson(account),
+        '/categories',
+        data: _categoryToJson(category),
       );
-      return _accountFromJson(response.data['data']);
+      return _categoryFromJson(response.data['data']);
     } on DioException catch (e) {
-      logger.e('Create account error: ${e.message}');
+      logger.e('Create category error: ${e.message}');
       throw _handleDioError(e);
     } catch (e) {
-      logger.e('Unexpected create account error: $e');
+      logger.e('Unexpected create category error: $e');
       throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 
   @override
-  Future<Account> updateAccount(Account account) async {
+  Future<Category> updateCategory(Category category) async {
     try {
       final response = await dio.put(
-        '/account/${account.id}',
-        data: _accountToJson(account),
+        '/categories/${category.id}',
+        data: _categoryToJson(category),
       );
-      return _accountFromJson(response.data['data']);
+      return _categoryFromJson(response.data['data']);
     } on DioException catch (e) {
-      logger.e('Update account error: ${e.message}');
+      logger.e('Update category error: ${e.message}');
       throw _handleDioError(e);
     } catch (e) {
-      logger.e('Unexpected update account error: $e');
+      logger.e('Unexpected update category error: $e');
       throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 
   @override
-  Future<void> deleteAccount(String id) async {
+  Future<void> deleteCategory(String id) async {
     try {
-      await dio.delete('/account/$id');
+      await dio.delete('/categories/$id');
     } on DioException catch (e) {
-      logger.e('Delete account error: ${e.message}');
+      logger.e('Delete category error: ${e.message}');
       throw _handleDioError(e);
     } catch (e) {
-      logger.e('Unexpected delete account error: $e');
+      logger.e('Unexpected delete category error: $e');
       throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 
-  Account _accountFromJson(Map<String, dynamic> json) {
-    return Account(
+  Category _categoryFromJson(Map<String, dynamic> json) {
+    return Category(
       id: json['id'] ?? '',
       name: json['name'],
-      description: json['description'] ?? '',
+      description: json['description'],
       icon: json['icon'] ?? '',
-      color: json['color'] ?? '',
+      color: json['color'] ?? '#2196F3',
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt']) 
           : null,
@@ -125,12 +125,12 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
     );
   }
 
-  Map<String, dynamic> _accountToJson(Account account) {
+  Map<String, dynamic> _categoryToJson(Category category) {
     return {
-      'name': account.name,
-      'description': account.description,
-      'icon': account.icon,
-      if (account.color != null) 'color': account.color,
+      'name': category.name,
+      'description': category.description,
+      'icon': category.icon,
+      'color': category.color,
     };
   }
 
@@ -162,7 +162,7 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
           'Validation error. Please check your inputs and try again.',
         );
       } else if (statusCode == 404) {
-        return CustomException('Account not found.');
+        return CustomException('Category not found.');
       } else if (statusCode == 500) {
         return CustomException('Server error. Please try again later.');
       } else {

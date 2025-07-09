@@ -1,90 +1,39 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
+import '../datasources/category_local_data_source.dart';
+import '../datasources/category_remote_data_source.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
-  // This would typically have data sources injected
+  final CategoryRemoteDataSource remoteDataSource;
+  final CategoryLocalDataSource localDataSource;
+
+  CategoryRepositoryImpl({
+    required this.remoteDataSource,
+    required this.localDataSource,
+  });
   
   @override
   Future<Either<Failure, List<Category>>> getCategories() async {
     try {
-      // Mock data for now
-      return Right([
-        Category(
-          id: '1',
-          name: 'Food',
-          icon: 'restaurant',
-          colorHex: '#F44336',
-          type: 'expense',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '2',
-          name: 'Transport',
-          icon: 'directions_car',
-          colorHex: '#2196F3',
-          type: 'expense',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '3',
-          name: 'Shopping',
-          icon: 'shopping_cart',
-          colorHex: '#4CAF50',
-          type: 'expense',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '4',
-          name: 'Entertainment',
-          icon: 'movie',
-          colorHex: '#FF9800',
-          type: 'expense',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '5',
-          name: 'Bills',
-          icon: 'receipt',
-          colorHex: '#9C27B0',
-          type: 'expense',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '6',
-          name: 'Health',
-          icon: 'local_hospital',
-          colorHex: '#009688',
-          type: 'expense',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '7',
-          name: 'Salary',
-          icon: 'account_balance_wallet',
-          colorHex: '#4CAF50',
-          type: 'income',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-        Category(
-          id: '8',
-          name: 'Investment',
-          icon: 'trending_up',
-          colorHex: '#2196F3',
-          type: 'income',
-          isDefault: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-      ]);
+      // Always try remote first
+      final result = await remoteDataSource.getCategories(page: 1, limit: 100);
+      final categories = result['categories'] as List<Category>;
+      
+      // Save to local cache
+      await localDataSource.saveCategories(categories);
+      
+      return Right(categories);
+    } on DioException catch (e) {
+      // On network error, try local cache
+      final cachedCategories = await localDataSource.getCategories();
+      if (cachedCategories.isNotEmpty) {
+        return Right(cachedCategories);
+      }
+      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -98,7 +47,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       return categoriesResult.fold(
         (failure) => Left(failure),
         (categories) {
-          final filtered = categories.where((c) => c.type == type).toList();
+          final filtered = categories.toList();
           return Right(filtered);
         },
       );
@@ -110,18 +59,17 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, Category>> getCategoryById(String id) async {
     try {
-      final categoriesResult = await getCategories();
-      
-      return categoriesResult.fold(
-        (failure) => Left(failure),
-        (categories) {
-          final category = categories.firstWhere(
-            (c) => c.id == id,
-            orElse: () => throw Exception('Category not found'),
-          );
-          return Right(category);
-        },
-      );
+      // Always try remote first
+      final remoteCategory = await remoteDataSource.getCategoryById(id);
+      await localDataSource.saveCategory(remoteCategory);
+      return Right(remoteCategory);
+    } on DioException catch (e) {
+      // On network error, try local cache
+      final cachedCategory = await localDataSource.getCategoryById(id);
+      if (cachedCategory != null) {
+        return Right(cachedCategory);
+      }
+      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -130,13 +78,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, Category>> createCategory(Category category) async {
     try {
-      // In a real app, this would add to storage
-      return Right(
-        category.copyWith(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          createdAt: DateTime.now(),
-        ),
-      );
+      final createdCategory = await remoteDataSource.createCategory(category);
+      await localDataSource.saveCategory(createdCategory);
+      return Right(createdCategory);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -145,12 +91,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, Category>> updateCategory(Category category) async {
     try {
-      // In a real app, this would update in storage
-      return Right(
-        category.copyWith(
-          updatedAt: DateTime.now(),
-        ),
-      );
+      final updatedCategory = await remoteDataSource.updateCategory(category);
+      await localDataSource.saveCategory(updatedCategory);
+      return Right(updatedCategory);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -159,8 +104,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, void>> deleteCategory(String id) async {
     try {
-      // In a real app, this would delete from storage
+      await remoteDataSource.deleteCategory(id);
+      await localDataSource.deleteCategory(id);
       return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

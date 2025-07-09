@@ -16,10 +16,12 @@ class CategoryListItem extends StatelessWidget {
     // Convert hex to color
     Color categoryColor = Theme.of(context).primaryColor;
     try {
-      final hexCode = category.colorHex.replaceFirst('#', '');
-      categoryColor = Color(int.parse('FF$hexCode', radix: 16));
+      if (category.color != null && category.color.isNotEmpty) {
+        final hexCode = category.color.replaceFirst('#', '');
+        categoryColor = Color(int.parse('FF$hexCode', radix: 16));
+      }
     } catch (e) {
-      // Use default if parsing fails
+      //
     }
 
     return Card(
@@ -55,16 +57,16 @@ class CategoryListItem extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (category.isDefault)
+                    if (category.description != null && category.description!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
-                          'Default',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
+                          category.description!,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                   ],
@@ -101,6 +103,66 @@ class CategoryListItem extends StatelessWidget {
         return Icons.account_balance_wallet;
       case 'trending_up':
         return Icons.trending_up;
+      case 'home':
+        return Icons.home;
+      case 'school':
+        return Icons.school;
+      case 'flight':
+        return Icons.flight;
+      case 'sports_esports':
+        return Icons.sports_esports;
+      case 'fitness_center':
+        return Icons.fitness_center;
+      case 'local_grocery_store':
+        return Icons.local_grocery_store;
+      case 'local_cafe':
+        return Icons.local_cafe;
+      case 'local_bar':
+        return Icons.local_bar;
+      case 'local_movies':
+        return Icons.local_movies;
+      case 'local_mall':
+        return Icons.local_mall;
+      case 'local_offer':
+        return Icons.local_offer;
+      case 'local_shipping':
+        return Icons.local_shipping;
+      case 'local_taxi':
+        return Icons.local_taxi;
+      case 'local_airport':
+        return Icons.local_airport;
+      case 'local_hotel':
+        return Icons.local_hotel;
+      case 'local_laundry_service':
+        return Icons.local_laundry_service;
+      case 'local_parking':
+        return Icons.local_parking;
+      case 'local_atm':
+        return Icons.local_atm;
+      case 'local_post_office':
+        return Icons.local_post_office;
+      case 'local_library':
+        return Icons.local_library;
+      case 'local_phone':
+        return Icons.local_phone;
+      case 'local_printshop':
+        return Icons.local_printshop;
+      case 'local_florist':
+        return Icons.local_florist;
+      case 'local_pizza':
+        return Icons.local_pizza;
+      case 'local_dining':
+        return Icons.local_dining;
+      case 'local_drink':
+        return Icons.local_drink;
+      case 'local_convenience_store':
+        return Icons.local_convenience_store;
+      case 'local_car_wash':
+        return Icons.local_car_wash;
+      case 'local_activity':
+        return Icons.local_activity;
+      case 'local_play':
+        return Icons.local_play;
       default:
         return Icons.category;
     }

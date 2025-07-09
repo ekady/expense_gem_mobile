@@ -6,7 +6,7 @@ class Account extends Equatable {
   final String? description;
   final String? icon;
   final String? color;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
   
   const Account({
@@ -15,7 +15,7 @@ class Account extends Equatable {
     this.description,
     this.icon,
     this.color,
-    required this.createdAt,
+    this.createdAt,
     this.updatedAt,
   });
   

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,32 +14,19 @@ class AccountsScreen extends ConsumerStatefulWidget {
 
 class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBindingObserver {
   final ScrollController _scrollController = ScrollController();
-  final FocusNode _focusNode = FocusNode();
   bool _isLoadingMore = false;
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addObserver(this);
-    
-    // Add focus listener to refresh when screen gains focus
-    _focusNode.addListener(() {
-      if (_focusNode.hasFocus && mounted) {
-        // Small delay to ensure navigation is complete
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) {
-            ref.read(accountsInfiniteScrollProvider.notifier).refresh();
-          }
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _focusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -48,20 +34,28 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh accounts when dependencies change (e.g., when returning to screen)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ref.read(accountsInfiniteScrollProvider.notifier).refresh();
-      }
-    });
+    // Only refresh once when the screen is first loaded
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+        }
+      });
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    // Refresh when app becomes active again
-    if (state == AppLifecycleState.resumed && mounted) {
-      ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+    // Only refresh when app becomes active and we have initialized
+    if (state == AppLifecycleState.resumed && mounted && _hasInitialized) {
+      // Add a small delay to avoid immediate refresh on app resume
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+        }
+      });
     }
   }
 
@@ -93,21 +87,26 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
     }
   }
 
+  // Method to refresh accounts when returning from form screens
+  void _refreshOnReturn() {
+    if (mounted && _hasInitialized) {
+      ref.read(accountsInfiniteScrollProvider.notifier).refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountsInfiniteScrollProvider);
 
-    return Focus(
-      focusNode: _focusNode,
-      autofocus: true,
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('Your Accounts'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/accounts/create');
+            onPressed: () async {
+              await context.push('/accounts/create');
+              _refreshOnReturn();
             },
           ),
         ],
@@ -138,8 +137,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () {
-                        context.push('/accounts/create');
+                      onPressed: () async {
+                        await context.push('/accounts/create');
+                        _refreshOnReturn();
                       },
                       icon: const Icon(Icons.add),
                       label: const Text('Add Account'),
@@ -174,8 +174,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
                   padding: const EdgeInsets.only(bottom: 12),
                   child: AccountItem(
                     account: account,
-                    onTap: () {
-                      context.push('/accounts/edit/${account.id}');
+                    onTap: () async {
+                      await context.push('/accounts/edit/${account.id}');
+                      _refreshOnReturn();
                     },
                   ),
                 );
@@ -215,7 +216,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
           ),
         ),
       ),
-    ));
+    );
   }
 }
 

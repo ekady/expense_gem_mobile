@@ -5,6 +5,7 @@ import 'package:expense_gem_mobile/features/auth/presentation/screens/otp_valida
 import 'package:expense_gem_mobile/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/reset_password_success_screen.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/screens/signup_screen.dart';
+import 'package:expense_gem_mobile/features/categories/presentation/screens/category_form_screen.dart';
 import 'package:expense_gem_mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:expense_gem_mobile/features/splash/presentation/screens/splash_screen.dart';
 import 'package:expense_gem_mobile/features/accounts/presentation/screens/accounts_screen.dart';
@@ -214,24 +215,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
-    );
-  }
-}
-
-class CategoryFormScreen extends StatelessWidget {
-  final String? categoryId;
-  
-  const CategoryFormScreen({super.key, this.categoryId});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(categoryId == null ? 'Create Category' : 'Edit Category'),
-      ),
-      body: const Center(
-        child: Text('Category Form'),
-      ),
     );
   }
 }

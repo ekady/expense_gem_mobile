@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../domain/entities/account.dart';
-import '../providers/account_providers.dart';
+import '../../domain/entities/category.dart';
+import '../providers/category_providers.dart';
 
-class AccountFormScreen extends ConsumerStatefulWidget {
-  final String? accountId;
+class CategoryFormScreen extends ConsumerStatefulWidget {
+  final String? categoryId;
 
-  const AccountFormScreen({super.key, this.accountId});
+  const CategoryFormScreen({super.key, this.categoryId});
 
   @override
-  ConsumerState<AccountFormScreen> createState() => _AccountFormScreenState();
+  ConsumerState<CategoryFormScreen> createState() => _CategoryFormScreenState();
 }
 
-class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
+class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -26,63 +26,40 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
   // Predefined list of available icons
   final List<Map<String, dynamic>> _availableIcons = [
-    {'name': 'account_balance', 'icon': Icons.account_balance, 'label': 'Bank'},
-    {'name': 'money', 'icon': Icons.money, 'label': 'Money'},
-    {'name': 'credit_card', 'icon': Icons.credit_card, 'label': 'Credit Card'},
-    {'name': 'savings', 'icon': Icons.savings, 'label': 'Savings'},
-    {'name': 'wallet', 'icon': Icons.wallet, 'label': 'Wallet'},
-    {'name': 'payments', 'icon': Icons.payments, 'label': 'Payments'},
+    {'name': 'restaurant', 'icon': Icons.restaurant, 'label': 'Food'},
     {
-      'name': 'account_circle',
-      'icon': Icons.account_circle,
-      'label': 'Account',
+      'name': 'directions_car',
+      'icon': Icons.directions_car,
+      'label': 'Transport',
     },
-    {'name': 'business', 'icon': Icons.business, 'label': 'Business'},
-    {'name': 'home', 'icon': Icons.home, 'label': 'Home'},
-    {'name': 'school', 'icon': Icons.school, 'label': 'School'},
-    {'name': 'store', 'icon': Icons.store, 'label': 'Store'},
     {'name': 'shopping_cart', 'icon': Icons.shopping_cart, 'label': 'Shopping'},
-    {'name': 'restaurant', 'icon': Icons.restaurant, 'label': 'Restaurant'},
-    {'name': 'hotel', 'icon': Icons.hotel, 'label': 'Hotel'},
-    {'name': 'flight', 'icon': Icons.flight, 'label': 'Flight'},
-    {'name': 'directions_car', 'icon': Icons.directions_car, 'label': 'Car'},
-    {'name': 'directions_bus', 'icon': Icons.directions_bus, 'label': 'Bus'},
+    {'name': 'movie', 'icon': Icons.movie, 'label': 'Entertainment'},
+    {'name': 'receipt', 'icon': Icons.receipt, 'label': 'Bills'},
+    {'name': 'local_hospital', 'icon': Icons.local_hospital, 'label': 'Health'},
     {
-      'name': 'directions_train',
-      'icon': Icons.directions_train,
-      'label': 'Train',
+      'name': 'account_balance_wallet',
+      'icon': Icons.account_balance_wallet,
+      'label': 'Salary',
     },
-    {'name': 'directions_bike', 'icon': Icons.directions_bike, 'label': 'Bike'},
-    {'name': 'directions_walk', 'icon': Icons.directions_walk, 'label': 'Walk'},
+    {'name': 'trending_up', 'icon': Icons.trending_up, 'label': 'Investment'},
+    {'name': 'home', 'icon': Icons.home, 'label': 'Home'},
+    {'name': 'school', 'icon': Icons.school, 'label': 'Education'},
+    {'name': 'flight', 'icon': Icons.flight, 'label': 'Travel'},
+    {'name': 'sports_esports', 'icon': Icons.sports_esports, 'label': 'Gaming'},
+    {
+      'name': 'fitness_center',
+      'icon': Icons.fitness_center,
+      'label': 'Fitness',
+    },
     {
       'name': 'local_grocery_store',
       'icon': Icons.local_grocery_store,
       'label': 'Grocery',
     },
-    {
-      'name': 'local_pharmacy',
-      'icon': Icons.local_pharmacy,
-      'label': 'Pharmacy',
-    },
-    {
-      'name': 'local_hospital',
-      'icon': Icons.local_hospital,
-      'label': 'Hospital',
-    },
-    {
-      'name': 'local_gas_station',
-      'icon': Icons.local_gas_station,
-      'label': 'Gas Station',
-    },
-    {'name': 'local_cafe', 'icon': Icons.local_cafe, 'label': 'Cafe'},
-    {
-      'name': 'local_restaurant',
-      'icon': Icons.local_restaurant,
-      'label': 'Restaurant',
-    },
-    {'name': 'local_bar', 'icon': Icons.local_bar, 'label': 'Bar'},
+    {'name': 'local_cafe', 'icon': Icons.local_cafe, 'label': 'Coffee'},
+    {'name': 'local_bar', 'icon': Icons.local_bar, 'label': 'Drinks'},
     {'name': 'local_movies', 'icon': Icons.local_movies, 'label': 'Movies'},
-    {'name': 'local_mall', 'icon': Icons.local_mall, 'label': 'Mall'},
+    {'name': 'local_mall', 'icon': Icons.local_mall, 'label': 'Shopping'},
     {'name': 'local_offer', 'icon': Icons.local_offer, 'label': 'Offers'},
     {
       'name': 'local_shipping',
@@ -105,19 +82,12 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       'label': 'Post Office',
     },
     {'name': 'local_library', 'icon': Icons.local_library, 'label': 'Library'},
-    {
-      'name': 'local_fire_department',
-      'icon': Icons.local_fire_department,
-      'label': 'Fire Dept',
-    },
-    {'name': 'local_police', 'icon': Icons.local_police, 'label': 'Police'},
     {'name': 'local_phone', 'icon': Icons.local_phone, 'label': 'Phone'},
     {
       'name': 'local_printshop',
       'icon': Icons.local_printshop,
       'label': 'Print Shop',
     },
-    {'name': 'local_see', 'icon': Icons.local_see, 'label': 'See'},
     {'name': 'local_florist', 'icon': Icons.local_florist, 'label': 'Florist'},
     {'name': 'local_pizza', 'icon': Icons.local_pizza, 'label': 'Pizza'},
     {'name': 'local_dining', 'icon': Icons.local_dining, 'label': 'Dining'},
@@ -174,21 +144,21 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the account form state provider
-    final accountFormState = ref.watch(
-      accountFormStateProvider(widget.accountId),
+    // Watch the category form state provider
+    final categoryFormState = ref.watch(
+      categoryFormStateProvider(widget.categoryId),
     );
 
-    // Handle the account data when it loads
-    accountFormState.whenOrNull(
-      data: (account) {
-        if (account != null && widget.accountId != null) {
+    // Handle the category data when it loads
+    categoryFormState.whenOrNull(
+      data: (category) {
+        if (category != null && widget.categoryId != null) {
           // Only set the values if they haven't been set yet (to avoid overwriting user input)
           if (_nameController.text.isEmpty) {
-            _nameController.text = account.name;
-            _descriptionController.text = account.description ?? '';
-            _selectedIcon = account.icon;
-            _selectedColorHex = account.color;
+            _nameController.text = category.name;
+            _descriptionController.text = category.description ?? '';
+            _selectedIcon = category.icon;
+            _selectedColorHex = category.color;
           }
         }
       },
@@ -197,13 +167,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.accountId == null ? 'Create Account' : 'Edit Account',
+          widget.categoryId == null ? 'Create Category' : 'Edit Category',
         ),
         actions: [
-          if (widget.accountId != null)
+          if (widget.categoryId != null)
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: _deleteAccount,
+              onPressed: _deleteCategory,
             ),
         ],
       ),
@@ -212,7 +182,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Account Icon Header
+            // Category Icon Header
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -237,7 +207,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                     child: Icon(
                       _selectedIcon != null
                           ? _getIconData(_selectedIcon!)
-                          : Icons.account_balance_wallet,
+                          : Icons.category,
                       color: Colors.white,
                       size: 24,
                     ),
@@ -248,9 +218,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.accountId == null
-                              ? 'Create Account'
-                              : 'Edit Account',
+                          widget.categoryId == null
+                              ? 'Create Category'
+                              : 'Edit Category',
                           style: Theme.of(
                             context,
                           ).textTheme.titleMedium?.copyWith(
@@ -260,7 +230,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Set up your account details',
+                          'Set up your category details',
                           style: Theme.of(
                             context,
                           ).textTheme.bodyMedium?.copyWith(
@@ -280,23 +250,23 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Account Name *',
-                hintText: 'e.g., Main Bank Account, Cash Wallet',
+                labelText: 'Category Name *',
+                hintText: 'e.g., Food, Transport, Salary',
                 prefixIcon: Icon(Icons.title),
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Account name is required';
+                  return 'Category name is required';
                 }
                 if (value.trim().length < 2) {
-                  return 'Account name must be at least 2 characters';
+                  return 'Category name must be at least 2 characters';
                 }
                 return null;
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
             // Description Field
             TextFormField(
@@ -304,7 +274,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               maxLines: 3,
               decoration: const InputDecoration(
                 labelText: 'Description (Optional)',
-                hintText: 'Add any additional details about this account...',
+                hintText: 'Add any additional details about this category...',
                 prefixIcon: Icon(Icons.description),
                 border: OutlineInputBorder(),
               ),
@@ -327,7 +297,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveAccount,
+                onPressed: _isLoading ? null : _saveCategory,
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -341,9 +311,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                         : Text(
-                          widget.accountId == null
-                              ? 'Create Account'
-                              : 'Update Account',
+                          widget.categoryId == null
+                              ? 'Create Category'
+                              : 'Update Category',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -507,7 +477,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     );
   }
 
-  Future<void> _saveAccount() async {
+  Future<void> _saveCategory() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -522,34 +492,44 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       return;
     }
 
+    if (_selectedColorHex == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a color'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final account = Account(
-        id: widget.accountId ?? '',
+      final category = Category(
+        id: widget.categoryId ?? '',
         name: _nameController.text.trim(),
         description:
             _descriptionController.text.trim().isEmpty
                 ? null
                 : _descriptionController.text.trim(),
         icon: _selectedIcon!,
-        color: _selectedColorHex,
+        color: _selectedColorHex!,
       );
 
       await ref
-          .read(accountFormStateProvider(widget.accountId).notifier)
-          .saveAccount(account);
+          .read(categoryFormStateProvider(widget.categoryId).notifier)
+          .saveCategory(category);
 
       if (mounted) {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.accountId == null
-                  ? 'Account created successfully!'
-                  : 'Account updated successfully!',
+              widget.categoryId == null
+                  ? 'Category created successfully!'
+                  : 'Category updated successfully!',
             ),
             backgroundColor: Colors.green,
           ),
@@ -570,16 +550,16 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     }
   }
 
-  Future<void> _deleteAccount() async {
-    if (widget.accountId == null) return;
+  Future<void> _deleteCategory() async {
+    if (widget.categoryId == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete Account'),
+            title: const Text('Delete Category'),
             content: const Text(
-              'Are you sure you want to delete this account?',
+              'Are you sure you want to delete this category?',
             ),
             actions: [
               TextButton(
@@ -602,14 +582,14 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
       try {
         await ref
-            .read(accountFormStateProvider(widget.accountId).notifier)
-            .deleteAccount(widget.accountId!);
+            .read(categoryFormStateProvider(widget.categoryId).notifier)
+            .deleteCategory(widget.categoryId!);
 
         if (mounted) {
           context.pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Account deleted successfully!'),
+              content: Text('Category deleted successfully!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -632,58 +612,36 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
   IconData _getIconData(String iconName) {
     switch (iconName) {
-      case 'account_balance':
-        return Icons.account_balance;
-      case 'money':
-        return Icons.money;
-      case 'credit_card':
-        return Icons.credit_card;
-      case 'savings':
-        return Icons.savings;
-      case 'wallet':
-        return Icons.wallet;
-      case 'payments':
-        return Icons.payments;
-      case 'account_circle':
-        return Icons.account_circle;
-      case 'business':
-        return Icons.business;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'directions_car':
+        return Icons.directions_car;
+      case 'shopping_cart':
+        return Icons.shopping_cart;
+      case 'movie':
+        return Icons.movie;
+      case 'receipt':
+        return Icons.receipt;
+      case 'local_hospital':
+        return Icons.local_hospital;
+      case 'account_balance_wallet':
+        return Icons.account_balance_wallet;
+      case 'trending_up':
+        return Icons.trending_up;
       case 'home':
         return Icons.home;
       case 'school':
         return Icons.school;
-      case 'store':
-        return Icons.store;
-      case 'shopping_cart':
-        return Icons.shopping_cart;
-      case 'restaurant':
-        return Icons.restaurant;
-      case 'hotel':
-        return Icons.hotel;
       case 'flight':
         return Icons.flight;
-      case 'directions_car':
-        return Icons.directions_car;
-      case 'directions_bus':
-        return Icons.directions_bus;
-      case 'directions_train':
-        return Icons.directions_train;
-      case 'directions_bike':
-        return Icons.directions_bike;
-      case 'directions_walk':
-        return Icons.directions_walk;
+      case 'sports_esports':
+        return Icons.sports_esports;
+      case 'fitness_center':
+        return Icons.fitness_center;
       case 'local_grocery_store':
         return Icons.local_grocery_store;
-      case 'local_pharmacy':
-        return Icons.local_pharmacy;
-      case 'local_hospital':
-        return Icons.local_hospital;
-      case 'local_gas_station':
-        return Icons.local_gas_station;
       case 'local_cafe':
         return Icons.local_cafe;
-      case 'local_restaurant':
-        return Icons.local_restaurant;
       case 'local_bar':
         return Icons.local_bar;
       case 'local_movies':
@@ -710,16 +668,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         return Icons.local_post_office;
       case 'local_library':
         return Icons.local_library;
-      case 'local_fire_department':
-        return Icons.local_fire_department;
-      case 'local_police':
-        return Icons.local_police;
       case 'local_phone':
         return Icons.local_phone;
       case 'local_printshop':
         return Icons.local_printshop;
-      case 'local_see':
-        return Icons.local_see;
       case 'local_florist':
         return Icons.local_florist;
       case 'local_pizza':
@@ -737,7 +689,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       case 'local_play':
         return Icons.local_play;
       default:
-        return Icons.account_balance_wallet;
+        return Icons.category;
     }
   }
 }

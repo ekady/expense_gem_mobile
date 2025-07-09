@@ -209,8 +209,14 @@ class AuthInterceptor extends Interceptor {
         await localDataSource.deleteToken();
       
         final result = await remoteDataSource.refreshToken(refreshToken);
+
+        if (result.isEmpty || result['token'] == null) {
+          throw Exception('Token is null');
+        }
+
         await localDataSource.saveToken(result['token']);
         await localDataSource.saveRefreshToken(result['refreshToken']);
+
         // Retry original request
         final opts = err.requestOptions;
         final cloneReq = await dio.fetch(opts);
