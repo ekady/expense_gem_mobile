@@ -25,8 +25,8 @@ final transactionsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TransactionsRef = AutoDisposeFutureProviderRef<List<Transaction>>;
-String _$filteredTransactionsHash() =>
-    r'd87ddd57b6c82ac6bc276bcb6268784310d3f57d';
+String _$paginatedTransactionsHash() =>
+    r'67ff4178ca2a1627a8160858e9a0992ef5ded10f';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -49,40 +49,26 @@ class _SystemHash {
   }
 }
 
-/// See also [filteredTransactions].
-@ProviderFor(filteredTransactions)
-const filteredTransactionsProvider = FilteredTransactionsFamily();
+/// See also [paginatedTransactions].
+@ProviderFor(paginatedTransactions)
+const paginatedTransactionsProvider = PaginatedTransactionsFamily();
 
-/// See also [filteredTransactions].
-class FilteredTransactionsFamily extends Family<AsyncValue<List<Transaction>>> {
-  /// See also [filteredTransactions].
-  const FilteredTransactionsFamily();
+/// See also [paginatedTransactions].
+class PaginatedTransactionsFamily
+    extends Family<AsyncValue<Map<String, dynamic>>> {
+  /// See also [paginatedTransactions].
+  const PaginatedTransactionsFamily();
 
-  /// See also [filteredTransactions].
-  FilteredTransactionsProvider call({
-    String? type,
-    String? categoryId,
-    String? accountId,
-    DateTimeRange? dateRange,
-  }) {
-    return FilteredTransactionsProvider(
-      type: type,
-      categoryId: categoryId,
-      accountId: accountId,
-      dateRange: dateRange,
-    );
+  /// See also [paginatedTransactions].
+  PaginatedTransactionsProvider call({int page = 1, int limit = 10}) {
+    return PaginatedTransactionsProvider(page: page, limit: limit);
   }
 
   @override
-  FilteredTransactionsProvider getProviderOverride(
-    covariant FilteredTransactionsProvider provider,
+  PaginatedTransactionsProvider getProviderOverride(
+    covariant PaginatedTransactionsProvider provider,
   ) {
-    return call(
-      type: provider.type,
-      categoryId: provider.categoryId,
-      accountId: provider.accountId,
-      dateRange: provider.dateRange,
-    );
+    return call(page: provider.page, limit: provider.limit);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -97,102 +83,84 @@ class FilteredTransactionsFamily extends Family<AsyncValue<List<Transaction>>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'filteredTransactionsProvider';
+  String? get name => r'paginatedTransactionsProvider';
 }
 
-/// See also [filteredTransactions].
-class FilteredTransactionsProvider
-    extends AutoDisposeFutureProvider<List<Transaction>> {
-  /// See also [filteredTransactions].
-  FilteredTransactionsProvider({
-    String? type,
-    String? categoryId,
-    String? accountId,
-    DateTimeRange? dateRange,
-  }) : this._internal(
-         (ref) => filteredTransactions(
-           ref as FilteredTransactionsRef,
-           type: type,
-           categoryId: categoryId,
-           accountId: accountId,
-           dateRange: dateRange,
-         ),
-         from: filteredTransactionsProvider,
-         name: r'filteredTransactionsProvider',
-         debugGetCreateSourceHash:
-             const bool.fromEnvironment('dart.vm.product')
-                 ? null
-                 : _$filteredTransactionsHash,
-         dependencies: FilteredTransactionsFamily._dependencies,
-         allTransitiveDependencies:
-             FilteredTransactionsFamily._allTransitiveDependencies,
-         type: type,
-         categoryId: categoryId,
-         accountId: accountId,
-         dateRange: dateRange,
-       );
+/// See also [paginatedTransactions].
+class PaginatedTransactionsProvider
+    extends AutoDisposeFutureProvider<Map<String, dynamic>> {
+  /// See also [paginatedTransactions].
+  PaginatedTransactionsProvider({int page = 1, int limit = 10})
+    : this._internal(
+        (ref) => paginatedTransactions(
+          ref as PaginatedTransactionsRef,
+          page: page,
+          limit: limit,
+        ),
+        from: paginatedTransactionsProvider,
+        name: r'paginatedTransactionsProvider',
+        debugGetCreateSourceHash:
+            const bool.fromEnvironment('dart.vm.product')
+                ? null
+                : _$paginatedTransactionsHash,
+        dependencies: PaginatedTransactionsFamily._dependencies,
+        allTransitiveDependencies:
+            PaginatedTransactionsFamily._allTransitiveDependencies,
+        page: page,
+        limit: limit,
+      );
 
-  FilteredTransactionsProvider._internal(
+  PaginatedTransactionsProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.type,
-    required this.categoryId,
-    required this.accountId,
-    required this.dateRange,
+    required this.page,
+    required this.limit,
   }) : super.internal();
 
-  final String? type;
-  final String? categoryId;
-  final String? accountId;
-  final DateTimeRange? dateRange;
+  final int page;
+  final int limit;
 
   @override
   Override overrideWith(
-    FutureOr<List<Transaction>> Function(FilteredTransactionsRef provider)
+    FutureOr<Map<String, dynamic>> Function(PaginatedTransactionsRef provider)
     create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: FilteredTransactionsProvider._internal(
-        (ref) => create(ref as FilteredTransactionsRef),
+      override: PaginatedTransactionsProvider._internal(
+        (ref) => create(ref as PaginatedTransactionsRef),
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        type: type,
-        categoryId: categoryId,
-        accountId: accountId,
-        dateRange: dateRange,
+        page: page,
+        limit: limit,
       ),
     );
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<Transaction>> createElement() {
-    return _FilteredTransactionsProviderElement(this);
+  AutoDisposeFutureProviderElement<Map<String, dynamic>> createElement() {
+    return _PaginatedTransactionsProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is FilteredTransactionsProvider &&
-        other.type == type &&
-        other.categoryId == categoryId &&
-        other.accountId == accountId &&
-        other.dateRange == dateRange;
+    return other is PaginatedTransactionsProvider &&
+        other.page == page &&
+        other.limit == limit;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, type.hashCode);
-    hash = _SystemHash.combine(hash, categoryId.hashCode);
-    hash = _SystemHash.combine(hash, accountId.hashCode);
-    hash = _SystemHash.combine(hash, dateRange.hashCode);
+    hash = _SystemHash.combine(hash, page.hashCode);
+    hash = _SystemHash.combine(hash, limit.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -200,35 +168,24 @@ class FilteredTransactionsProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin FilteredTransactionsRef
-    on AutoDisposeFutureProviderRef<List<Transaction>> {
-  /// The parameter `type` of this provider.
-  String? get type;
+mixin PaginatedTransactionsRef
+    on AutoDisposeFutureProviderRef<Map<String, dynamic>> {
+  /// The parameter `page` of this provider.
+  int get page;
 
-  /// The parameter `categoryId` of this provider.
-  String? get categoryId;
-
-  /// The parameter `accountId` of this provider.
-  String? get accountId;
-
-  /// The parameter `dateRange` of this provider.
-  DateTimeRange? get dateRange;
+  /// The parameter `limit` of this provider.
+  int get limit;
 }
 
-class _FilteredTransactionsProviderElement
-    extends AutoDisposeFutureProviderElement<List<Transaction>>
-    with FilteredTransactionsRef {
-  _FilteredTransactionsProviderElement(super.provider);
+class _PaginatedTransactionsProviderElement
+    extends AutoDisposeFutureProviderElement<Map<String, dynamic>>
+    with PaginatedTransactionsRef {
+  _PaginatedTransactionsProviderElement(super.provider);
 
   @override
-  String? get type => (origin as FilteredTransactionsProvider).type;
+  int get page => (origin as PaginatedTransactionsProvider).page;
   @override
-  String? get categoryId => (origin as FilteredTransactionsProvider).categoryId;
-  @override
-  String? get accountId => (origin as FilteredTransactionsProvider).accountId;
-  @override
-  DateTimeRange? get dateRange =>
-      (origin as FilteredTransactionsProvider).dateRange;
+  int get limit => (origin as PaginatedTransactionsProvider).limit;
 }
 
 String _$transactionHash() => r'0a0fdb63054520197c441c2bde9b0d7385d40224';
@@ -351,8 +308,258 @@ class _TransactionProviderElement
   String get id => (origin as TransactionProvider).id;
 }
 
+String _$transactionsInfiniteScrollHash() =>
+    r'675c039496ba04d7eac6a036c840969b8678138c';
+
+abstract class _$TransactionsInfiniteScroll
+    extends BuildlessAutoDisposeAsyncNotifier<List<Transaction>> {
+  late final String? categoryId;
+  late final String? accountId;
+  late final DateTime? startDate;
+  late final DateTime? endDate;
+  late final int? amountType;
+
+  FutureOr<List<Transaction>> build({
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  });
+}
+
+/// See also [TransactionsInfiniteScroll].
+@ProviderFor(TransactionsInfiniteScroll)
+const transactionsInfiniteScrollProvider = TransactionsInfiniteScrollFamily();
+
+/// See also [TransactionsInfiniteScroll].
+class TransactionsInfiniteScrollFamily
+    extends Family<AsyncValue<List<Transaction>>> {
+  /// See also [TransactionsInfiniteScroll].
+  const TransactionsInfiniteScrollFamily();
+
+  /// See also [TransactionsInfiniteScroll].
+  TransactionsInfiniteScrollProvider call({
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  }) {
+    return TransactionsInfiniteScrollProvider(
+      categoryId: categoryId,
+      accountId: accountId,
+      startDate: startDate,
+      endDate: endDate,
+      amountType: amountType,
+    );
+  }
+
+  @override
+  TransactionsInfiniteScrollProvider getProviderOverride(
+    covariant TransactionsInfiniteScrollProvider provider,
+  ) {
+    return call(
+      categoryId: provider.categoryId,
+      accountId: provider.accountId,
+      startDate: provider.startDate,
+      endDate: provider.endDate,
+      amountType: provider.amountType,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'transactionsInfiniteScrollProvider';
+}
+
+/// See also [TransactionsInfiniteScroll].
+class TransactionsInfiniteScrollProvider
+    extends
+        AutoDisposeAsyncNotifierProviderImpl<
+          TransactionsInfiniteScroll,
+          List<Transaction>
+        > {
+  /// See also [TransactionsInfiniteScroll].
+  TransactionsInfiniteScrollProvider({
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  }) : this._internal(
+         () =>
+             TransactionsInfiniteScroll()
+               ..categoryId = categoryId
+               ..accountId = accountId
+               ..startDate = startDate
+               ..endDate = endDate
+               ..amountType = amountType,
+         from: transactionsInfiniteScrollProvider,
+         name: r'transactionsInfiniteScrollProvider',
+         debugGetCreateSourceHash:
+             const bool.fromEnvironment('dart.vm.product')
+                 ? null
+                 : _$transactionsInfiniteScrollHash,
+         dependencies: TransactionsInfiniteScrollFamily._dependencies,
+         allTransitiveDependencies:
+             TransactionsInfiniteScrollFamily._allTransitiveDependencies,
+         categoryId: categoryId,
+         accountId: accountId,
+         startDate: startDate,
+         endDate: endDate,
+         amountType: amountType,
+       );
+
+  TransactionsInfiniteScrollProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.categoryId,
+    required this.accountId,
+    required this.startDate,
+    required this.endDate,
+    required this.amountType,
+  }) : super.internal();
+
+  final String? categoryId;
+  final String? accountId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final int? amountType;
+
+  @override
+  FutureOr<List<Transaction>> runNotifierBuild(
+    covariant TransactionsInfiniteScroll notifier,
+  ) {
+    return notifier.build(
+      categoryId: categoryId,
+      accountId: accountId,
+      startDate: startDate,
+      endDate: endDate,
+      amountType: amountType,
+    );
+  }
+
+  @override
+  Override overrideWith(TransactionsInfiniteScroll Function() create) {
+    return ProviderOverride(
+      origin: this,
+      override: TransactionsInfiniteScrollProvider._internal(
+        () =>
+            create()
+              ..categoryId = categoryId
+              ..accountId = accountId
+              ..startDate = startDate
+              ..endDate = endDate
+              ..amountType = amountType,
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        categoryId: categoryId,
+        accountId: accountId,
+        startDate: startDate,
+        endDate: endDate,
+        amountType: amountType,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeAsyncNotifierProviderElement<
+    TransactionsInfiniteScroll,
+    List<Transaction>
+  >
+  createElement() {
+    return _TransactionsInfiniteScrollProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TransactionsInfiniteScrollProvider &&
+        other.categoryId == categoryId &&
+        other.accountId == accountId &&
+        other.startDate == startDate &&
+        other.endDate == endDate &&
+        other.amountType == amountType;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, categoryId.hashCode);
+    hash = _SystemHash.combine(hash, accountId.hashCode);
+    hash = _SystemHash.combine(hash, startDate.hashCode);
+    hash = _SystemHash.combine(hash, endDate.hashCode);
+    hash = _SystemHash.combine(hash, amountType.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin TransactionsInfiniteScrollRef
+    on AutoDisposeAsyncNotifierProviderRef<List<Transaction>> {
+  /// The parameter `categoryId` of this provider.
+  String? get categoryId;
+
+  /// The parameter `accountId` of this provider.
+  String? get accountId;
+
+  /// The parameter `startDate` of this provider.
+  DateTime? get startDate;
+
+  /// The parameter `endDate` of this provider.
+  DateTime? get endDate;
+
+  /// The parameter `amountType` of this provider.
+  int? get amountType;
+}
+
+class _TransactionsInfiniteScrollProviderElement
+    extends
+        AutoDisposeAsyncNotifierProviderElement<
+          TransactionsInfiniteScroll,
+          List<Transaction>
+        >
+    with TransactionsInfiniteScrollRef {
+  _TransactionsInfiniteScrollProviderElement(super.provider);
+
+  @override
+  String? get categoryId =>
+      (origin as TransactionsInfiniteScrollProvider).categoryId;
+  @override
+  String? get accountId =>
+      (origin as TransactionsInfiniteScrollProvider).accountId;
+  @override
+  DateTime? get startDate =>
+      (origin as TransactionsInfiniteScrollProvider).startDate;
+  @override
+  DateTime? get endDate =>
+      (origin as TransactionsInfiniteScrollProvider).endDate;
+  @override
+  int? get amountType =>
+      (origin as TransactionsInfiniteScrollProvider).amountType;
+}
+
 String _$transactionFormStateHash() =>
-    r'7064ac232aed4774263d49911939d70dcdc90c89';
+    r'a0197c16962c7400ebf2756c70f8687b8d431019';
 
 abstract class _$TransactionFormState
     extends BuildlessAutoDisposeNotifier<AsyncValue<Transaction?>> {

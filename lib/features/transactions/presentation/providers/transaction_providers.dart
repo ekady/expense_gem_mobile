@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -25,72 +24,142 @@ Future<List<Transaction>> transactions(Ref ref) async {
   );
 }
 
-// Filtered transactions provider
+// Paginated transactions provider
 @riverpod
-Future<List<Transaction>> filteredTransactions(
-  Ref ref, {
-  String? type,
-  String? categoryId,
-  String? accountId,
-  DateTimeRange? dateRange,
-}) async {
+Future<Map<String, dynamic>> paginatedTransactions(Ref ref, {int page = 1, int limit = 10}) async {
   final repository = ref.watch(transactionRepositoryProvider);
+  final result = await repository.getPaginatedTransactions(page: page, limit: limit);
 
-  // Get all transactions first as the base
-  final allTransactionsResult = await repository.getTransactions();
-
-  return allTransactionsResult.fold((failure) => throw failure.message, (
-    transactions,
-  ) {
-    // Apply filters sequentially
-    var filteredTransactions = List<Transaction>.from(transactions);
-
-    // Filter by type
-    if (type != null) {
-      filteredTransactions =
-          filteredTransactions
-              .where((transaction) => transaction.type == type)
-              .toList();
-    }
-
-    // Filter by category
-    if (categoryId != null) {
-      filteredTransactions =
-          filteredTransactions
-              .where((transaction) => transaction.categoryId == categoryId)
-              .toList();
-    }
-
-    // Filter by account
-    if (accountId != null) {
-      filteredTransactions =
-          filteredTransactions
-              .where((transaction) => transaction.accountId == accountId)
-              .toList();
-    }
-
-    // Filter by date range
-    if (dateRange != null) {
-      filteredTransactions =
-          filteredTransactions
-              .where(
-                (transaction) =>
-                    transaction.date.isAfter(
-                      dateRange.start.subtract(const Duration(days: 1)),
-                    ) &&
-                    transaction.date.isBefore(
-                      dateRange.end.add(const Duration(days: 1)),
-                    ),
-              )
-              .toList();
-    }
-
-    // Sort by date, newest first
-    filteredTransactions.sort((a, b) => b.date.compareTo(a.date));
-
-    return filteredTransactions;
-  });
+  return result.fold(
+    (failure) => throw failure.message,
+    (data) => data,
+  );
 }
+
+// Infinite scroll transactions provider
+@riverpod
+class TransactionsInfiniteScroll extends _$TransactionsInfiniteScroll {
+  bool _isLoadingMore = false;
+  bool _hasReachedEnd = false;
+
+  String? _categoryId;
+  String? _accountId;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  int? _amountType;
+
+  @override
+  Future<List<Transaction>> build({
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  }) async {
+    return _loadFirstPage(
+      categoryId: categoryId,
+      accountId: accountId,
+      startDate: startDate,
+      endDate: endDate,
+      amountType: amountType,
+    );
+  }
+
+  Future<List<Transaction>> _loadFirstPage({
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  }) async {
+    _hasReachedEnd = false;
+    _categoryId = categoryId;
+    _accountId = accountId;
+    _startDate = startDate;
+    _endDate = endDate;
+    _amountType = amountType;
+    final repository = ref.read(transactionRepositoryProvider);
+    final result = await repository.getPaginatedTransactions(
+      page: 1,
+      limit: 10,
+      categoryId: categoryId,
+      accountId: accountId,
+      startDate: startDate,
+      endDate: endDate,
+      amountType: amountType,
+    );
+    return result.fold(
+      (failure) => throw failure.message,
+      (data) {
+        final transactions = data['transactions'] as List<Transaction>;
+        if (transactions.length < 10) {
+          _hasReachedEnd = true;
+        }
+        return transactions;
+      },
+    );
+  }
+
+  Future<void> loadNextPage() async {
+    if (_isLoadingMore || _hasReachedEnd) return;
+    _isLoadingMore = true;
+    try {
+      final currentTransactions = state.value ?? [];
+      final repository = ref.read(transactionRepositoryProvider);
+      final result = await repository.getPaginatedTransactions(
+        page: (currentTransactions.length / 10).ceil() + 1,
+        limit: 10,
+        categoryId: _categoryId,
+        accountId: _accountId,
+        startDate: _startDate,
+        endDate: _endDate,
+        amountType: _amountType,
+      );
+      result.fold(
+        (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
+        (data) {
+          final newTransactions = data['transactions'] as List<Transaction>;
+          if (newTransactions.isNotEmpty) {
+            final allTransactions = [...currentTransactions, ...newTransactions];
+            state = AsyncValue.data(allTransactions);
+            if (newTransactions.length < 10) {
+              _hasReachedEnd = true;
+            }
+          } else {
+            _hasReachedEnd = true;
+          }
+        },
+      );
+    } finally {
+      _isLoadingMore = false;
+    }
+  }
+
+  Future<void> refresh({
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  }) async {
+    _isLoadingMore = false;
+    _hasReachedEnd = false;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _loadFirstPage(
+      categoryId: categoryId,
+      accountId: accountId,
+      startDate: startDate,
+      endDate: endDate,
+      amountType: amountType,
+    ));
+  }
+
+  bool get hasMoreData {
+    return !_isLoadingMore && !_hasReachedEnd;
+  }
+}
+
+
 
 // Single transaction provider
 @riverpod
@@ -132,7 +201,7 @@ class TransactionFormState extends _$TransactionFormState {
 
     final repository = ref.read(transactionRepositoryProvider);
     final result =
-        transaction.id.isEmpty
+        (transaction.id?.isEmpty ?? true)
             ? await repository.createTransaction(transaction)
             : await repository.updateTransaction(transaction);
 
@@ -140,7 +209,13 @@ class TransactionFormState extends _$TransactionFormState {
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
       (savedTransaction) {
         ref.invalidate(transactionsProvider);
-        ref.invalidate(filteredTransactionsProvider);
+        ref.invalidate(paginatedTransactionsProvider);
+        ref.read(transactionsInfiniteScrollProvider(
+          categoryId: null,
+          accountId: null,
+          startDate: null,
+          endDate: null,
+        ).notifier).refresh();
         return AsyncValue.data(savedTransaction);
       },
     );
@@ -158,7 +233,13 @@ class TransactionFormState extends _$TransactionFormState {
       },
       (_) {
         ref.invalidate(transactionsProvider);
-        ref.invalidate(filteredTransactionsProvider);
+        ref.invalidate(paginatedTransactionsProvider);
+        ref.read(transactionsInfiniteScrollProvider(
+          categoryId: null,
+          accountId: null,
+          startDate: null,
+          endDate: null,
+        ).notifier).refresh();
         state = const AsyncValue.data(null);
       },
     );

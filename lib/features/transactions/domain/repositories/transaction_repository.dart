@@ -5,6 +5,15 @@ import '../entities/transaction.dart';
 
 abstract class TransactionRepository {
   Future<Either<Failure, List<Transaction>>> getTransactions();
+  Future<Either<Failure, Map<String, dynamic>>> getPaginatedTransactions({
+    int page = 1,
+    int limit = 10,
+    String? categoryId,
+    String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? amountType,
+  });
   Future<Either<Failure, List<Transaction>>> getTransactionsByAccount(String accountId);
   Future<Either<Failure, List<Transaction>>> getTransactionsByCategory(String categoryId);
   Future<Either<Failure, List<Transaction>>> getTransactionsByType(String type);

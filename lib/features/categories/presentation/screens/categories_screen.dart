@@ -105,8 +105,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                       _refreshOnReturn();
                     },
                   ),
-                ).animate().fadeIn(
-                  delay: Duration(milliseconds: 100 * index),
                 );
               },
             );

@@ -10,6 +10,8 @@ import 'package:expense_gem_mobile/features/categories/data/datasources/category
 import 'package:expense_gem_mobile/features/categories/data/datasources/category_remote_data_source.dart';
 import 'package:expense_gem_mobile/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:expense_gem_mobile/features/categories/domain/repositories/category_repository.dart';
+import 'package:expense_gem_mobile/features/transactions/data/datasources/transaction_local_data_source.dart';
+import 'package:expense_gem_mobile/features/transactions/data/datasources/transaction_remote_data_source.dart';
 import 'package:expense_gem_mobile/features/transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:expense_gem_mobile/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:dio/dio.dart';
@@ -90,6 +92,20 @@ Future<void> setupServiceLocator() async {
     ),
   );
   
+  // Transaction Data sources
+  getIt.registerSingleton<TransactionLocalDataSource>(
+    TransactionLocalDataSourceImpl(
+      sharedPreferences: getIt<SharedPreferences>(),
+    ),
+  );
+  
+  getIt.registerSingleton<TransactionRemoteDataSource>(
+    TransactionRemoteDataSourceImpl(
+      dio: getIt<Dio>(),
+      logger: getIt<Logger>(),
+    ),
+  );
+  
   // Register AuthInterceptor for automatic token refresh and logout
   getIt<Dio>().interceptors.add(
     AuthInterceptor(
@@ -122,6 +138,9 @@ Future<void> setupServiceLocator() async {
   );
   
   getIt.registerSingleton<TransactionRepository>(
-    TransactionRepositoryImpl(),
+    TransactionRepositoryImpl(
+      remoteDataSource: getIt<TransactionRemoteDataSource>(),
+      localDataSource: getIt<TransactionLocalDataSource>(),
+    ),
   );
 }

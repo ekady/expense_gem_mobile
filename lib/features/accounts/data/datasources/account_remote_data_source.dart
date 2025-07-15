@@ -136,40 +136,62 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
 
   Exception _handleDioError(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout) {
-      return CustomException(
+      throw CustomException(
         'Connection timeout. Please check your internet connection.',
       );
     } else if (e.type == DioExceptionType.receiveTimeout) {
-      return CustomException(
+      throw CustomException(
         'Server is taking too long to respond. Please try again later.',
       );
     } else if (e.type == DioExceptionType.connectionError) {
-      return CustomException(
+      throw CustomException(
         'No internet connection. Please check your network settings.',
       );
     } else if (e.response != null) {
       final statusCode = e.response!.statusCode;
-      final responseData = e.response!.data?['errors']?[0] as Map<String, dynamic>?;
-
-      if (responseData != null && responseData.containsKey('message')) {
-        return CustomException(responseData['message']);
-      } else if (statusCode == 401) {
-        return CustomException(
-          'Unauthorized. Please log in again.',
-        );
-      } else if (statusCode == 422) {
-        return CustomException(
-          'Validation error. Please check your inputs and try again.',
-        );
-      } else if (statusCode == 404) {
-        return CustomException('Account not found.');
-      } else if (statusCode == 500) {
-        return CustomException('Server error. Please try again later.');
-      } else {
-        return CustomException('An error occurred. Please try again later.');
+      final responseData = e.response!.data;
+      
+      // Log the actual response structure for debugging
+      logger.d('API Error Response: $responseData');
+      
+      String errorMessage = 'An error occurred. Please try again later.';
+      
+      // Try different response structures
+      if (responseData is Map<String, dynamic>) {
+        // Try errors array structure
+        final errors = responseData['errors'] as List<dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          final firstError = errors[0];
+          if (firstError is Map<String, dynamic> && firstError.containsKey('message')) {
+            errorMessage = firstError['message'];
+          }
+        }
+        
+        // Try message field directly
+        if (responseData.containsKey('message')) {
+          errorMessage = responseData['message'];
+        }
+        
+        // Try error field
+        if (responseData.containsKey('error')) {
+          errorMessage = responseData['error'];
+        }
       }
+      
+      // Override with specific status code messages
+      if (statusCode == 401) {
+        errorMessage = 'Unauthorized. Please log in again.';
+      } else if (statusCode == 422) {
+        errorMessage = 'Validation error. Please check your inputs and try again.';
+      } else if (statusCode == 404) {
+        errorMessage = 'Account not found.';
+      } else if (statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      throw CustomException(errorMessage);
     } else {
-      return CustomException('An unexpected error occurred. Please try again.');
+      throw CustomException('An unexpected error occurred. Please try again.');
     }
   }
 } 

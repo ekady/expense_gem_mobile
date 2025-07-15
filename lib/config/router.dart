@@ -10,6 +10,7 @@ import 'package:expense_gem_mobile/features/dashboard/presentation/screens/dashb
 import 'package:expense_gem_mobile/features/splash/presentation/screens/splash_screen.dart';
 import 'package:expense_gem_mobile/features/accounts/presentation/screens/accounts_screen.dart';
 import 'package:expense_gem_mobile/features/categories/presentation/screens/categories_screen.dart';
+import 'package:expense_gem_mobile/features/transactions/presentation/screens/transaction_form_screen.dart';
 import 'package:expense_gem_mobile/features/transactions/presentation/screens/transactions_screen.dart';
 import 'package:expense_gem_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:expense_gem_mobile/features/settings/presentation/screens/settings_screen.dart';
@@ -215,24 +216,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
-    );
-  }
-}
-
-class TransactionFormScreen extends StatelessWidget {
-  final String? transactionId;
-  
-  const TransactionFormScreen({super.key, this.transactionId});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(transactionId == null ? 'Create Transaction' : 'Edit Transaction'),
-      ),
-      body: const Center(
-        child: Text('Transaction Form'),
-      ),
     );
   }
 }
