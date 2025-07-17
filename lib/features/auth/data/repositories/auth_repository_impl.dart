@@ -1,7 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:logger/logger.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/services/service_locator.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_data_source.dart';
@@ -185,8 +188,20 @@ class AuthInterceptor extends Interceptor {
   final Dio dio;
   final AuthLocalDataSource localDataSource;
   final AuthRemoteDataSource remoteDataSource;
+  bool _isRefreshing = false;
+  VoidCallback? _onForceLogout;
+  final Logger _logger = getIt<Logger>();
 
-  AuthInterceptor(this.dio, this.localDataSource, this.remoteDataSource);
+  AuthInterceptor(
+    this.dio, 
+    this.localDataSource, 
+    this.remoteDataSource, {
+    VoidCallback? onForceLogout,
+  }) : _onForceLogout = onForceLogout;
+
+  void setOnForceLogoutCallback(VoidCallback callback) {
+    _onForceLogout = callback;
+  }
 
   @override
   void onRequest(
@@ -196,38 +211,119 @@ class AuthInterceptor extends Interceptor {
     final token = await localDataSource.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+      _logger.d('Added Authorization header to request: ${options.path}');
     }
     handler.next(options);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    try {
-      final refreshToken = await localDataSource.getRefreshToken();
-
-      if (err.response?.statusCode == 401 && refreshToken != null) {
-        await localDataSource.deleteToken();
+    _logger.d('Interceptor received error:  [31m${err.response?.statusCode} [0m for ${err.requestOptions.path}');
+    
+    // Prevent infinite loop: if this is a refresh token request, do not try to refresh again
+    if (err.requestOptions.headers['is-refresh-token'] == true) {
+      _logger.w('401 received on refresh token request. Forcing logout, not retrying.');
+      await _forceLogout();
+      return handler.next(err);
+    }
+    if (err.response?.statusCode == 401) {
+      _logger.d('Received 401 error for request: ${err.requestOptions.path}');
       
-        final result = await remoteDataSource.refreshToken(refreshToken);
+      try {
+        // Prevent multiple simultaneous refresh attempts
+        if (_isRefreshing) {
+          _logger.d('Token refresh already in progress, waiting...');
+          // Wait for the current refresh to complete
+          await Future.delayed(const Duration(milliseconds: 100));
+          final newToken = await localDataSource.getToken();
+          if (newToken != null) {
+            _logger.d('Retrying request with new token');
+            // Retry with new token
+            final opts = err.requestOptions;
+            opts.headers['Authorization'] = 'Bearer $newToken';
+            final cloneReq = await dio.fetch(opts);
+            return handler.resolve(cloneReq);
+          }
+        }
 
+        _isRefreshing = true;
+        _logger.d('Starting token refresh...');
+        
+        final refreshToken = await localDataSource.getRefreshToken();
+        _logger.d('Refresh token found: ${refreshToken != null}');
+        
+        if (refreshToken == null) {
+          _logger.w('No refresh token found, forcing logout');
+          // No refresh token, force logout
+          await _forceLogout();
+          return handler.next(err);
+        }
+
+        // Delete the old token before refreshing
+        await localDataSource.deleteToken();
+        _logger.d('Deleted old token, attempting refresh...');
+        
+        final result = await remoteDataSource.refreshToken(refreshToken);
+        _logger.d('Refresh result: ${result.keys}');
+        
         if (result.isEmpty || result['token'] == null) {
-          throw Exception('Token is null');
+          _logger.e('Invalid refresh response received');
+          throw Exception('Invalid refresh response');
         }
 
         await localDataSource.saveToken(result['token']);
         await localDataSource.saveRefreshToken(result['refreshToken']);
+        _logger.d('Successfully refreshed tokens');
 
-        // Retry original request
+        // Retry original request with new token
         final opts = err.requestOptions;
+        opts.headers['Authorization'] = 'Bearer ${result['token']}';
         final cloneReq = await dio.fetch(opts);
+        
+        _isRefreshing = false;
+        _logger.d('Successfully retried request with new token');
         return handler.resolve(cloneReq);
+        
+      } catch (e) {
+        _isRefreshing = false;
+        _logger.e('Token refresh failed: $e');
+        // When refresh fails, force logout
+        await _forceLogout();
+        return handler.next(err);
       }
-    } catch (e) {
-      // When refresh fails, delete both tokens to force re-login
+    } else {
+      _logger.d('Not a 401 error, passing through: ${err.response?.statusCode}');
+    }
+    
+    handler.next(err);
+  }
+
+  Future<void> _forceLogout() async {
+    try {
+      _logger.w('Performing forced logout...');
+      // Clear all auth data
       await localDataSource.deleteToken();
       await localDataSource.deleteRefreshToken();
       await localDataSource.deleteUser();
+      
+      // Notify about forced logout
+      _logger.d('Calling force logout callback...');
+      _onForceLogout?.call();
+      _logger.d('Forced logout completed');
+    } catch (e) {
+      // Log error but don't throw
+      _logger.e('Error during force logout: $e');
     }
-    handler.next(err);
+  }
+
+  // Test method to manually trigger a 401 error
+  Future<void> test401Error() async {
+    _logger.d('Testing 401 error handling...');
+    try {
+      // Make a request that will likely return 401
+      await dio.get('/user/me');
+    } catch (e) {
+      _logger.d('Test 401 error caught: $e');
+    }
   }
 }

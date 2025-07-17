@@ -92,6 +92,10 @@ class AuthState extends AutoDisposeAsyncNotifier<User?> {
       (_) => state = const AsyncValue.data(null),
     );
   }
+
+  void forceLogout() {
+    state = const AsyncValue.data(null);
+  }
 }
 
 // Form State Providers

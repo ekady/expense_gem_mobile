@@ -107,13 +107,17 @@ Future<void> setupServiceLocator() async {
   );
   
   // Register AuthInterceptor for automatic token refresh and logout
-  getIt<Dio>().interceptors.add(
-    AuthInterceptor(
-      getIt<Dio>(),
-      getIt<AuthLocalDataSource>(),
-      getIt<AuthRemoteDataSource>(),
-    ),
+  final authInterceptor = AuthInterceptor(
+    getIt<Dio>(),
+    getIt<AuthLocalDataSource>(),
+    getIt<AuthRemoteDataSource>(),
   );
+  
+  getIt.registerSingleton<AuthInterceptor>(authInterceptor);
+  getIt<Dio>().interceptors.add(authInterceptor);
+  
+  // Debug: Log that interceptor was added
+  getIt<Logger>().d('AuthInterceptor added to Dio. Total interceptors: ${getIt<Dio>().interceptors.length}');
   
   // Repositories
   getIt.registerSingleton<AuthRepository>(

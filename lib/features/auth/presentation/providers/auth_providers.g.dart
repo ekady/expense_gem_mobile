@@ -159,7 +159,7 @@ final validateOtpUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ValidateOtpUseCaseRef = AutoDisposeProviderRef<ValidateOtpUseCase>;
-String _$authStateHash() => r'0b4e7b87fe5a6d3a9fd33de469d516ede5dce4e8';
+String _$authStateHash() => r'ab99bb1b16e3ccfa69564d256fb38a40ad729daa';
 
 /// See also [AuthState].
 @ProviderFor(AuthState)

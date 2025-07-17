@@ -230,21 +230,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
     try {
+      logger.d('Attempting to refresh token...');
       final response = await dio.post(
         '/authentication/refresh',
+        data: {
+          'refreshToken': refreshToken,
+        },
         options: Options(
-          headers: {
-            'Authorization': 'Bearer $refreshToken',
-          },
+          headers: {'is-refresh-token': true},
         ),
       );
+      logger.d('Refresh response:  [32m [1m [4m${response.data} [0m');
       final data = response.data['data'];
+      logger.d('Refresh data: $data');
       return {
         'token': data['accessToken'],
         'refreshToken': data['refreshToken'],
       };
     } on DioException catch (e) {
       logger.e('Refresh token error: ${e.message}');
+      logger.e('Refresh token error response: ${e.response?.data}');
       throw _handleDioError(e);
     } catch (e) {
       logger.e('Unexpected refresh token error: $e');
