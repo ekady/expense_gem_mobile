@@ -51,18 +51,37 @@ class TransactionListItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      transaction.payee ?? '',
+                      transaction.payee ?? 'Unknown',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
+                    if (transaction.category?.name != null) ...[
+                      Text(
+                        transaction.category?.name ?? 'Unknown Category',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: _getCategoryColor(transaction.category?.color),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    // Account and date info
                     Row(
                       children: [
-                        Text(
-                          transaction.account?.name ?? '',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        Expanded(
+                          child: Text(
+                            transaction.account?.name ?? 'Unknown Account',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -80,14 +99,38 @@ class TransactionListItem extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Text(
-                isIncome
-                    ? '+ ${CurrencyFormatter.format(transaction.amount ?? 0)}'
-                    : '- ${CurrencyFormatter.format((transaction.amount ?? 0) * -1)}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isIncome ? Colors.green : Colors.red,
-                ),
+              // Amount with type indicator
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    isIncome
+                        ? '+ ${CurrencyFormatter.format(transaction.amount ?? 0)}'
+                        : '- ${CurrencyFormatter.format((transaction.amount ?? 0) * -1)}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isIncome ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isIncome 
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isIncome ? 'Income' : 'Expense',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isIncome ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

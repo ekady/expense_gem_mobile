@@ -168,6 +168,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             selectedCategory: _selectedCategory,
             selectedAccount: _selectedAccount,
             selectedDateRange: _selectedDateRange,
+            selectedType: _selectedAmountType == null ? null : _selectedAmountType == 1 ? 'income' : 'expense',
             onCategoryChanged:
                 (categoryId) => _onFilterChanged(
                   category: categoryId,
@@ -258,33 +259,29 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error:
                     (error, stackTrace) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 80,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.error.withValues(alpha: 0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Error loading transactions',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            error.toString(),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: _refreshProvider,
-                            child: const Text('Retry'),
-                          ),
-                        ],
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 80,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.error.withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error loading transactions',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: _refreshProvider,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
               ),

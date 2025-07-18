@@ -150,6 +150,8 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                       ],
                     ),
                   ),
+
+                 Text(widget.toString() ?? '-'),
                   
                   const SizedBox(height: 16),
                   
