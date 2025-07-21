@@ -37,17 +37,23 @@ class ExpenseTrackerApp extends ConsumerWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         final authInterceptor = getIt<AuthInterceptor>();
+        print('Auth interceptor satu lagi: $authInterceptor');
         authInterceptor.setOnForceLogoutCallback(() {
-          ref.read(authStateProvider.notifier).forceLogout();
+          print('Force logout callback triggered: ${context.mounted}');
+          if (context.mounted) {
+            ref.read(authStateProvider.notifier).forceLogout();
+          }
         });
       } catch (e) {
         //
       }
     });
 
-    ref.listen<AsyncValue<User?>>(authStateProvider, (_, next) {
-      if (next.value == null) {
-        context.go('/login');
+    ref.listen<AsyncValue<User?>>(authStateProvider, (prev, next) {
+      if (next is AsyncData && next.value == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          appRouter.go('/login');
+        });
       }
     });
 
