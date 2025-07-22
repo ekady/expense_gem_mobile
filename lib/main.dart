@@ -7,7 +7,6 @@ import 'package:expense_gem_mobile/features/auth/domain/entities/user.dart';
 import 'package:expense_gem_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
@@ -37,12 +36,8 @@ class ExpenseTrackerApp extends ConsumerWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         final authInterceptor = getIt<AuthInterceptor>();
-        print('Auth interceptor satu lagi: $authInterceptor');
         authInterceptor.setOnForceLogoutCallback(() {
-          print('Force logout callback triggered: ${context.mounted}');
-          if (context.mounted) {
-            ref.read(authStateProvider.notifier).forceLogout();
-          }
+          ref.read(authStateProvider.notifier).forceLogout();
         });
       } catch (e) {
         //
