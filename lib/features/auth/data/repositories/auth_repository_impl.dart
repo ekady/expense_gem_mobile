@@ -188,7 +188,6 @@ class AuthInterceptor extends Interceptor {
   final Dio dio;
   final AuthLocalDataSource localDataSource;
   final AuthRemoteDataSource remoteDataSource;
-  bool _isRefreshing = false;
   VoidCallback? _onForceLogout;
   final Logger _logger = getIt<Logger>();
 
@@ -210,7 +209,7 @@ class AuthInterceptor extends Interceptor {
   ) async {
     final token = await localDataSource.getToken();
     if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+      options.headers['Authorization'] = options.headers['Authorization'] ?? 'Bearer $token';
       _logger.d('Added Authorization header to request: ${options.path}');
     }
     handler.next(options);
@@ -230,45 +229,22 @@ class AuthInterceptor extends Interceptor {
       _logger.d('Received 401 error for request: ${err.requestOptions.path}');
       
       try {
-        // Prevent multiple simultaneous refresh attempts
-        if (_isRefreshing) {
-          _logger.d('Token refresh already in progress, waiting...');
-          // Wait for the current refresh to complete
-          await Future.delayed(const Duration(milliseconds: 100));
-          final newToken = await localDataSource.getToken();
-          if (newToken != null) {
-            _logger.d('Retrying request with new token');
-            // Retry with new token
-            final opts = err.requestOptions;
-            opts.headers['Authorization'] = 'Bearer $newToken';
-            final cloneReq = await dio.fetch(opts);
-            return handler.resolve(cloneReq);
-          }
-        }
-
-        _isRefreshing = true;
-        _logger.d('Starting token refresh...');
-        
         final refreshToken = await localDataSource.getRefreshToken();
         _logger.d('Refresh token found: ${refreshToken != null}');
         
         if (refreshToken == null) {
           _logger.w('No refresh token found, forcing logout');
-          // No refresh token, force logout
           await _forceLogout();
           return handler.next(err);
         }
 
-        // Delete the old token before refreshing
-        await localDataSource.deleteToken();
-        _logger.d('Deleted old token, attempting refresh...');
-        
-        final result = await remoteDataSource.refreshToken(refreshToken);
+         final result = await remoteDataSource.refreshToken(refreshToken);
         _logger.d('Refresh result: ${result.keys}');
-        
+
         if (result.isEmpty || result['token'] == null) {
           _logger.e('Invalid refresh response received');
-          throw Exception('Invalid refresh response');
+          await _forceLogout();
+          return handler.next(err);
         }
 
         await localDataSource.saveToken(result['token']);
@@ -280,14 +256,11 @@ class AuthInterceptor extends Interceptor {
         opts.headers['Authorization'] = 'Bearer ${result['token']}';
         final cloneReq = await dio.fetch(opts);
         
-        _isRefreshing = false;
         _logger.d('Successfully retried request with new token');
         return handler.resolve(cloneReq);
         
       } catch (e) {
-        _isRefreshing = false;
         _logger.e('Token refresh failed: $e');
-        // When refresh fails, force logout
         await _forceLogout();
         return handler.next(err);
       }

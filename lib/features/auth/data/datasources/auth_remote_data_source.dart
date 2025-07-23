@@ -126,15 +126,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> resetPassword(String email, String token, String password) async {
+  Future<void> resetPassword(
+    String email,
+    String token,
+    String password,
+  ) async {
     try {
       await dio.post(
         '/authentication/reset-password',
-        data: {
-          'email': email,
-          'resetToken': token,
-          'newPassword': password,
-        },
+        data: {'email': email, 'resetToken': token, 'newPassword': password},
       );
     } on DioException catch (e) {
       logger.e('Reset password error: ${e.message}');
@@ -182,45 +182,48 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } else if (e.response != null) {
       final statusCode = e.response!.statusCode;
       final responseData = e.response!.data;
-      
+
       // Log the actual response structure for debugging
       logger.d('API Error Response: $responseData');
-      
+
       String errorMessage = 'An error occurred. Please try again later.';
-      
+
       // Try different response structures
       if (responseData is Map<String, dynamic>) {
         // Try errors array structure
         final errors = responseData['errors'] as List<dynamic>?;
         if (errors != null && errors.isNotEmpty) {
           final firstError = errors[0];
-          if (firstError is Map<String, dynamic> && firstError.containsKey('message')) {
+          if (firstError is Map<String, dynamic> &&
+              firstError.containsKey('message')) {
             errorMessage = firstError['message'];
           }
         }
-        
+
         // Try message field directly
         if (responseData.containsKey('message')) {
           errorMessage = responseData['message'];
         }
-        
+
         // Try error field
         if (responseData.containsKey('error')) {
           errorMessage = responseData['error'];
         }
       }
-      
+
       // Override with specific status code messages
       if (statusCode == 401) {
-        errorMessage = 'Invalid credentials. Please check your email and password.';
+        errorMessage =
+            'Invalid credentials. Please check your email and password.';
       } else if (statusCode == 422) {
-        errorMessage = 'Validation error. Please check your inputs and try again.';
+        errorMessage =
+            'Validation error. Please check your inputs and try again.';
       } else if (statusCode == 404) {
         errorMessage = 'Resource not found.';
       } else if (statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
       }
-      
+
       throw CustomException(errorMessage);
     } else {
       throw CustomException('An unexpected error occurred. Please try again.');
@@ -233,11 +236,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       logger.d('Attempting to refresh token...');
       final response = await dio.post(
         '/authentication/refresh',
-        data: {
-          'refreshToken': refreshToken,
-        },
+        data: {'refreshToken': refreshToken},
         options: Options(
-          headers: {'is-refresh-token': true},
+          headers: {
+            'is-refresh-token': true,
+            'Authorization': 'Bearer $refreshToken',
+          },
         ),
       );
       logger.d('Refresh response:  [32m [1m [4m${response.data} [0m');
@@ -250,7 +254,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on DioException catch (e) {
       logger.e('Refresh token error: ${e.message}');
       logger.e('Refresh token error response: ${e.response?.data}');
-      throw _handleDioError(e);
+      rethrow;
     } catch (e) {
       logger.e('Unexpected refresh token error: $e');
       throw Exception('An unexpected error occurred. Please try again.');
@@ -260,9 +264,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     try {
-      await dio.post(
-        '/authentication/sign-out',
-      );
+      await dio.post('/authentication/sign-out');
     } on DioException catch (e) {
       logger.e('Logout error: ${e.message}');
       throw _handleDioError(e);
