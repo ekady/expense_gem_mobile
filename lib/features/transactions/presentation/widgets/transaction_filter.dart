@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
+import '../../../categories/presentation/screens/category_selection_screen.dart';
+import '../../../accounts/presentation/screens/account_selection_screen.dart';
+import '../../../accounts/domain/entities/account.dart';
+import '../../../categories/domain/entities/category.dart';
 
 class TransactionFilter extends ConsumerStatefulWidget {
   final String? selectedType;
@@ -14,7 +18,7 @@ class TransactionFilter extends ConsumerStatefulWidget {
   final Function(String?) onAccountChanged;
   final Function(DateTimeRange?) onDateRangeChanged;
   final VoidCallback onResetFilters;
-  
+
   const TransactionFilter({
     super.key,
     this.selectedType,
@@ -34,22 +38,21 @@ class TransactionFilter extends ConsumerStatefulWidget {
 
 class _TransactionFilterState extends ConsumerState<TransactionFilter> {
   bool _isExpanded = false;
-  
+
   @override
   Widget build(BuildContext context) {
-    final bool hasActiveFilters = widget.selectedType != null || 
-                                 widget.selectedCategory != null || 
-                                 widget.selectedAccount != null || 
-                                 widget.selectedDateRange != null;
-                                 
+    final bool hasActiveFilters =
+        widget.selectedType != null ||
+        widget.selectedCategory != null ||
+        widget.selectedAccount != null ||
+        widget.selectedDateRange != null;
+
     final categoriesAsync = ref.watch(categoriesProvider);
     final accountsAsync = ref.watch(accountsProvider);
-    
+
     return Card(
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           // Filter header
@@ -65,18 +68,20 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                 children: [
                   Icon(
                     Icons.filter_list,
-                    color: hasActiveFilters 
-                        ? Theme.of(context).primaryColor
-                        : null,
+                    color:
+                        hasActiveFilters
+                            ? Theme.of(context).primaryColor
+                            : null,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Filters',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: hasActiveFilters 
-                          ? Theme.of(context).primaryColor
-                          : null,
+                      color:
+                          hasActiveFilters
+                              ? Theme.of(context).primaryColor
+                              : null,
                     ),
                   ),
                   if (hasActiveFilters) ...[
@@ -92,15 +97,17 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                       ),
                       child: Text(
                         'Active',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white),
                       ),
                     ),
                   ],
                   const Spacer(),
                   IconButton(
-                    icon: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+                    icon: Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    ),
                     onPressed: () {
                       setState(() {
                         _isExpanded = !_isExpanded;
@@ -111,7 +118,7 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
               ),
             ),
           ),
-          
+
           // Expanded filters
           if (_isExpanded) ...[
             const Divider(height: 1),
@@ -151,88 +158,129 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                     ),
                   ),
 
-                 Text(widget.toString() ?? '-'),
-                  
                   const SizedBox(height: 16),
-                  
+
                   // Category Filter
                   Text(
                     'Category',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  categoriesAsync.when(
-                    data: (categories) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildFilterChip(
-                              label: 'All Categories',
-                              isSelected: widget.selectedCategory == null,
-                              onSelected: (_) => widget.onCategoryChanged(null),
+                  Row(
+                    children: [
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final categoriesAsync = ref.watch(categoriesProvider);
+                          String? selectedCategoryName;
+                          if (widget.selectedCategory != null) {
+                            categoriesAsync.whenData((categories) {
+                              selectedCategoryName =
+                                  categories
+                                      .firstWhere(
+                                        (c) => c.id == widget.selectedCategory,
+                                        orElse:
+                                            () => const Category(
+                                              id: '',
+                                              name: '',
+                                              icon: '',
+                                              color: '',
+                                            ),
+                                      )
+                                      .name;
+                            });
+                          }
+
+                          return _buildFilterChip(
+                            label: selectedCategoryName ?? 'All Categories',
+                            isSelected: true,
+                            onSelected: (_) => widget.onCategoryChanged(null),
+                            onDeleted: widget.selectedCategory != null
+                                ? () => widget.onCategoryChanged(null)
+                                : null,
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () async {
+                          final selected = await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder:
+                                  (_) => CategorySelectionScreen(
+                                    selectedCategoryId: widget.selectedCategory,
+                                  ),
                             ),
-                            ...categories.map((category) {
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: _buildFilterChip(
-                                  label: category.name,
-                                  isSelected: widget.selectedCategory == category.id,
-                                  onSelected: (_) => widget.onCategoryChanged(category.id),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    error: (_, __) => const Text('Failed to load categories'),
+                          );
+                          if (selected != null) {
+                            widget.onCategoryChanged(selected.id);
+                          }
+                        },
+                        child: const Text('Select'),
+                      ),
+                    ],
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Account Filter
                   Text(
                     'Account',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  accountsAsync.when(
-                    data: (accounts) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildFilterChip(
-                              label: 'All Accounts',
-                              isSelected: widget.selectedAccount == null,
-                              onSelected: (_) => widget.onAccountChanged(null),
+                  Row(
+                    children: [
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final accountsAsync = ref.watch(accountsProvider);
+                          String? selectedAccountName;
+                          if (widget.selectedAccount != null) {
+                            accountsAsync.whenData((accounts) {
+                              selectedAccountName =
+                                  accounts
+                                      .firstWhere(
+                                        (a) => a.id == widget.selectedAccount,
+                                        orElse:
+                                            () =>
+                                                const Account(id: '', name: ''),
+                                      )
+                                      .name;
+                            });
+                          }
+                          return _buildFilterChip(
+                            label: selectedAccountName ?? 'All Accounts',
+                            isSelected: true,
+                            onSelected: (_) => widget.onAccountChanged(null),
+                            onDeleted: widget.selectedAccount != null
+                                ? () => widget.onAccountChanged(null)
+                                : null,
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () async {
+                          final selected = await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder:
+                                  (_) => AccountSelectionScreen(
+                                    selectedAccountId: widget.selectedAccount,
+                                  ),
                             ),
-                            ...accounts.map((account) {
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: _buildFilterChip(
-                                  label: account.name,
-                                  isSelected: widget.selectedAccount == account.id,
-                                  onSelected: (_) => widget.onAccountChanged(account.id),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    error: (_, __) => const Text('Failed to load accounts'),
+                          );
+                          if (selected != null) {
+                            widget.onAccountChanged(selected.id);
+                          }
+                        },
+                        child: const Text('Select'),
+                      ),
+                    ],
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Date Range Filter
                   Text(
                     'Date Range',
@@ -244,19 +292,24 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () async {
-                            final initialDateRange = widget.selectedDateRange ?? 
+                            final initialDateRange =
+                                widget.selectedDateRange ??
                                 DateTimeRange(
-                                  start: DateTime.now().subtract(const Duration(days: 30)),
+                                  start: DateTime.now().subtract(
+                                    const Duration(days: 30),
+                                  ),
                                   end: DateTime.now(),
                                 );
-                            
+
                             final pickedDateRange = await showDateRangePicker(
                               context: context,
                               firstDate: DateTime(2000),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
                               initialDateRange: initialDateRange,
                             );
-                            
+
                             if (pickedDateRange != null) {
                               widget.onDateRangeChanged(pickedDateRange);
                             }
@@ -280,9 +333,9 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                       ],
                     ],
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Reset Filters Button
                   if (hasActiveFilters)
                     SizedBox(
@@ -301,16 +354,19 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
       ),
     );
   }
-  
+
   Widget _buildFilterChip({
     required String label,
     required bool isSelected,
     required Function(bool) onSelected,
+    VoidCallback? onDeleted,
   }) {
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
+      onDeleted: onDeleted,
+      deleteIcon: onDeleted != null ? Icon(Icons.close, color: Theme.of(context).colorScheme.primary,) : null,
       backgroundColor: Theme.of(context).cardColor,
       selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
       checkmarkColor: Theme.of(context).primaryColor,

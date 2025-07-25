@@ -17,15 +17,13 @@ class CategoryRepositoryImpl implements CategoryRepository {
   });
   
   @override
-  Future<Either<Failure, List<Category>>> getCategories() async {
+  Future<Either<Failure, List<Category>>> getCategories({int page = 1, int limit = 20}) async {
     try {
       // Always try remote first
-      final result = await remoteDataSource.getCategories(page: 1, limit: 100);
+      final result = await remoteDataSource.getCategories(page: page, limit: limit);
       final categories = result['categories'] as List<Category>;
-      
       // Save to local cache
       await localDataSource.saveCategories(categories);
-      
       return Right(categories);
     } on DioException catch (e) {
       // On network error, try local cache

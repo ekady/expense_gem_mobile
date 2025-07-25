@@ -111,7 +111,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   // Only call this when filters change or on refresh
   void _refreshProvider() {
-    ref.read(_providerInstance().notifier).refresh();
+    // Only jump to top, do not call .refresh() on the new provider instance
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
@@ -140,6 +140,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
       setState(() {
         _isLoadingMore = false;
       });
+      // Only call .refresh() for explicit reloads
+      ref.read(_providerInstance().notifier).refresh();
       _refreshProvider();
     }
   }
@@ -216,7 +218,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                _refreshProvider();
+                ref.read(provider.notifier).refresh();
                 return ref.read(provider.future);
               },
               child: transactionsAsync.when(

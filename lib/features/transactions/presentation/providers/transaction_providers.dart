@@ -98,7 +98,7 @@ class TransactionsInfiniteScroll extends _$TransactionsInfiniteScroll {
         return transactions;
       },
     );
-  }
+    }
 
   Future<void> loadNextPage() async {
     if (_isLoadingMore || _hasReachedEnd) return;

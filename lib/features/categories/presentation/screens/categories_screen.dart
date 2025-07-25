@@ -16,28 +16,31 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
     with WidgetsBindingObserver {
   bool _hasInitialized = false;
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Only refresh once when the screen is first loaded
     if (!_hasInitialized) {
       _hasInitialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ref.invalidate(categoriesProvider);
+          ref.invalidate(categoriesInfiniteScrollProvider);
         }
       });
     }
@@ -46,27 +49,35 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    // Only refresh when app becomes active and we have initialized
     if (state == AppLifecycleState.resumed && mounted && _hasInitialized) {
-      // Add a small delay to avoid immediate refresh on app resume
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
-          ref.invalidate(categoriesProvider);
+          ref.invalidate(categoriesInfiniteScrollProvider);
         }
       });
     }
   }
 
-  // Method to refresh categories when returning from form screens
+  void _onScroll() {
+    if (_isLoadingMore) return;
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+      final notifier = ref.read(categoriesInfiniteScrollProvider.notifier);
+      if (notifier.hasMoreData) {
+        setState(() => _isLoadingMore = true);
+        notifier.loadNextPage().whenComplete(() => setState(() => _isLoadingMore = false));
+      }
+    }
+  }
+
   void _refreshOnReturn() {
     if (mounted && _hasInitialized) {
-      ref.invalidate(categoriesProvider);
+      ref.invalidate(categoriesInfiniteScrollProvider);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoriesAsync = ref.watch(categoriesInfiniteScrollProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -83,7 +94,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(categoriesProvider);
+          ref.invalidate(categoriesInfiniteScrollProvider);
         },
         child: categoriesAsync.when(
           data: (categories) {
@@ -91,10 +102,22 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
               return _buildEmptyState();
             }
 
+            final notifier = ref.read(categoriesInfiniteScrollProvider.notifier);
             return ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: categories.length,
+              itemCount: categories.length + 1,
               itemBuilder: (context, index) {
+                if (index == categories.length) {
+                  if (notifier.hasMoreData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                }
                 final category = categories[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -133,7 +156,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    ref.invalidate(categoriesProvider);
+                    ref.invalidate(categoriesInfiniteScrollProvider);
                   },
                   child: const Text('Retry'),
                 ),

@@ -135,3 +135,46 @@ class CategoryFormState extends _$CategoryFormState {
     );
   }
 }
+
+// Infinite scroll provider for categories
+class CategoriesInfiniteScrollNotifier extends AsyncNotifier<List<Category>> {
+  static const int _pageSize = 20;
+  int _currentPage = 1;
+  bool _hasMoreData = true;
+  bool get hasMoreData => _hasMoreData;
+  bool _isLoading = false;
+
+  @override
+  Future<List<Category>> build() async {
+    _currentPage = 1;
+    _hasMoreData = true;
+    final initial = await _fetchPage(_currentPage);
+    return initial;
+  }
+
+  Future<void> loadNextPage() async {
+    if (!_hasMoreData || _isLoading) return;
+    _isLoading = true;
+    _currentPage++;
+    final nextPage = await _fetchPage(_currentPage);
+    if (nextPage.isEmpty) {
+      _hasMoreData = false;
+    } else {
+      state = AsyncValue.data([...?state.value, ...nextPage]);
+    }
+    _isLoading = false;
+  }
+
+  Future<List<Category>> _fetchPage(int page) async {
+    final useCase = ref.read(getCategoriesUseCaseProvider);
+    final result = await useCase.call(page: page, pageSize: _pageSize);
+    return result.fold(
+      (failure) => throw failure.message,
+      (categories) => categories,
+    );
+  }
+}
+
+final categoriesInfiniteScrollProvider = AsyncNotifierProvider<CategoriesInfiniteScrollNotifier, List<Category>>(
+  CategoriesInfiniteScrollNotifier.new,
+);

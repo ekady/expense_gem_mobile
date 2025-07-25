@@ -183,9 +183,25 @@ class ProfileScreen extends ConsumerWidget {
                           iconColor: Theme.of(context).colorScheme.error,
                           textColor: Theme.of(context).colorScheme.error,
                           onTap: () async {
-                            await ref.read(authStateProvider.notifier).logout();
-                            if (context.mounted) {
-                              context.go('/login');
+                            final shouldLogout = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Confirm Logout'),
+                                content: const Text('Are you sure you want to log out?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (shouldLogout == true) {
+                              await ref.read(authStateProvider.notifier).logout();
                             }
                           },
                         ),

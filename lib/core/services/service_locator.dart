@@ -108,9 +108,9 @@ Future<void> setupServiceLocator() async {
   
   // Register AuthInterceptor for automatic token refresh and logout
   final authInterceptor = AuthInterceptor(
-    getIt<Dio>(),
-    getIt<AuthLocalDataSource>(),
-    getIt<AuthRemoteDataSource>(),
+      getIt<Dio>(),
+      getIt<AuthLocalDataSource>(),
+      getIt<AuthRemoteDataSource>(),
   );
   
   getIt.registerSingleton<AuthInterceptor>(authInterceptor);
