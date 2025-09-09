@@ -8,6 +8,7 @@ import '../widgets/expense_summary_card.dart';
 import '../widgets/recent_transaction_card.dart';
 import '../widgets/filter_chip_group.dart';
 import '../widgets/dashboard_header.dart';
+import '../providers/dashboard_providers.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -20,6 +21,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String _selectedPeriod = 'This Month';
   String? _selectedAccount;
   String? _selectedCategory;
+  DateTimeRange? _selectedDateRange;
+  int? _selectedAmountType;
 
   final List<String> _periods = [
     'Today',
@@ -45,6 +48,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filterParams = DashboardSummaryFilterParams(
+      categoryId: _selectedCategory,
+      accountId: _selectedAccount,
+      startDate: _selectedDateRange?.start,
+      endDate: _selectedDateRange?.end,
+      amountType: _selectedAmountType,
+    );
+    final summaryAsync = ref.watch(dashboardSummaryProvider(filterParams));
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -176,81 +187,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: ExpenseSummaryCard(
-                  income: 4500.00,
-                  expense: 2750.25,
-                  pieChartSections: [
-                    PieChartSectionData(
-                      value: 35,
-                      title: '35%',
-                      color: Colors.red,
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    PieChartSectionData(
-                      value: 25,
-                      title: '25%',
-                      color: Colors.blue,
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    PieChartSectionData(
-                      value: 20,
-                      title: '20%',
-                      color: Colors.green,
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    PieChartSectionData(
-                      value: 15,
-                      title: '15%',
-                      color: Colors.orange,
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    PieChartSectionData(
-                      value: 5,
-                      title: '5%',
-                      color: Colors.purple,
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                  categories: const [
-                    {'name': 'Food', 'color': Colors.red, 'percentage': 35},
-                    {
-                      'name': 'Transport',
-                      'color': Colors.blue,
-                      'percentage': 25,
-                    },
-                    {
-                      'name': 'Shopping',
-                      'color': Colors.green,
-                      'percentage': 20,
-                    },
-                    {'name': 'Bills', 'color': Colors.orange, 'percentage': 15},
-                    {'name': 'Other', 'color': Colors.purple, 'percentage': 5},
-                  ],
+                child: summaryAsync.when(
+                  data: (summary) => ExpenseSummaryCard(
+                    income: summary.incomeAmount,
+                    expense: summary.expensesAmount,
+                    pieChartSections: [], // TODO: Map summary.categories to PieChartSectionData
+                    categories: summary.categories.map((c) => {
+                      'name': c.name,
+                      'color': Colors.blue, // TODO: Assign color based on category or palette
+                      'percentage': c.value, // TODO: Map value to percentage if needed
+                    }).toList(),
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
                 ),
               ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
             ),
