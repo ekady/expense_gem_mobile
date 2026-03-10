@@ -1,208 +1,275 @@
-#  Expense Gem Mobile
+# Expense Gem Mobile
 
-<div align="center">
-  <img src="https://via.placeholder.com/200x200/4CAF50/FFFFFF?text=💰" alt="Expense Gem Mobile Logo" width="200" height="200">
+A Flutter mobile application for personal expense tracking with Clean Architecture, Riverpod state management, and Hive local storage.
+
+## Features
+
+- **Authentication**: Login, Signup, Forgot Password, OTP Validation, Password Reset
+- **Dashboard**: Overview of income, expenses, account balance, recent transactions, category breakdown
+- **Accounts**: Manage multiple accounts (Cash, Bank, Credit Card, etc.)
+- **Categories**: Create and manage transaction categories with icons and colors
+- **Transactions**: Record income and expenses with categories, accounts, dates, and notes
+- **Profile**: User profile management with settings
+
+## Architecture
+
+The app follows **Clean Architecture** with three distinct layers:
+
+```
+lib/
+├── config/              # App configuration (theme, router, env)
+├── core/
+│   ├── entities/        # Shared entities (ResponseMessage, Pagination)
+│   ├── error/           # Failures and exceptions
+│   ├── services/        # Service locator (get_it)
+│   └── utils/           # Utility functions
+└── features/
+    └── [feature_name]/
+        ├── data/           # Data layer
+        │   ├── datasources/ # Remote & local data sources
+        │   └── repositories/ # Repository implementations
+        ├── domain/          # Domain layer
+        │   ├── entities/    # Business entities
+        │   ├── repositories/ # Repository contracts
+        │   └── usecases/    # Business logic use cases
+        └── presentation/     # Presentation layer
+            ├── providers/   # Riverpod providers
+            ├── screens/     # UI screens
+            └── widgets/     # Reusable widgets
+```
+
+### Layer Responsibilities
+
+- **Data Layer**: Handles API calls, local storage, and data transformation
+- **Domain Layer**: Contains business logic, entities, and repository interfaces
+- **Presentation Layer**: Manages UI state with Riverpod and renders screens
+
+## Navigation Flow
+
+```
+Splash (/ - initial)
+    │
+    ├─[Not Authenticated]──> Login (/login)
+    │                              │
+    │                              ├─> Signup (/signup)
+    │                              │
+    │                              └─> Forgot Password (/forgot-password)
+    │                                           │
+    │                                           └─> OTP Validation (/otp-validation)
+    │                                                        │
+    │                                                        └─> Reset Password (/reset-password)
+    │                                                                     │
+    │                                                                     └─> Reset Success (/reset-password-success)
+    │
+    └─[Authenticated]───────────────> Dashboard (Bottom Nav - Tab 0)
+                                        │
+                                        ├─> Accounts (/accounts)
+                                        │       ├─> Create Account (/accounts/create)
+                                        │       └─> Edit Account (/accounts/edit/:id)
+                                        │
+                                        ├─> Categories (/categories)
+                                        │       ├─> Create Category (/categories/create)
+                                        │       └─> Edit Category (/categories/edit/:id)
+                                        │
+                                        ├─> Transactions (/transactions)
+                                        │       ├─> Create Transaction (/transactions/create)
+                                        │       └─> Edit Transaction (/transactions/edit/:id)
+                                        │
+                                        └─> Profile (/profile)
+                                                └─> Settings (/profile/settings)
+```
+
+### Bottom Navigation Tabs
+
+1. **Dashboard** (`/dashboard`) - Overview and summary
+2. **Accounts** (`/accounts`) - Account management
+3. **Categories** (`/categories`) - Category management
+4. **Transactions** (`/transactions`) - Transaction list
+5. **Profile** (`/profile`) - User profile and settings
+
+## Data Flow
+
+### Authentication Flow
+
+1. User enters credentials on Login screen
+2. `LoginUseCase` validates credentials via `AuthRepository`
+3. `AuthRemoteDataSource` makes API call
+4. On success: tokens stored in `AuthLocalDataSource` (secure storage)
+5. `AuthState` provider updates with user data
+6. App navigates to Dashboard
+
+### Transaction Flow
+
+1. User creates/edits transaction on `TransactionFormScreen`
+2. `TransactionFormNotifier` validates input
+3. `CreateTransactionUseCase` or `UpdateTransactionUseCase` called
+4. `TransactionRepository` attempts remote API call
+5. On failure: falls back to local cache via `TransactionLocalDataSource`
+6. On success: updates both remote and local storage
+7. Providers invalidate to refresh UI
+
+### Offline Support
+
+- Transactions, Accounts, and Categories cache data locally using SharedPreferences
+- When offline: app reads from local cache
+- When online: syncs with remote API, then updates local cache
+
+## State Management (Riverpod)
+
+The app uses Riverpod with code generation:
+
+```dart
+@riverpod
+class AuthState extends AutoDisposeAsyncNotifier<User?> {
+  @override
+  Future<User?> build() async { ... }
   
-  <p><strong>A modern, feature-rich expense tracking mobile application built with Flutter</strong></p>
-  
-  [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
-  [![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev/)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-</div>
+  Future<void> login(String email, String password) async { ... }
+}
+```
 
-## 📱 Introduction
+### Provider Types Used
 
-**Expense Gem Mobile** is a comprehensive personal finance management application that helps users track their income, expenses, and financial goals with an intuitive and modern interface. Built with Flutter, it provides a seamless cross-platform experience for both iOS and Android users.
+- `AutoDisposeAsyncNotifierProvider` - For async state with cleanup
+- `@riverpod` - For simple function providers
+- `Provider` - For dependency injection (e.g., use cases)
 
-### ✨ Key Features
+## Error Handling
 
-- 📊 **Dashboard Analytics** - Visual insights into your spending patterns
-- 💳 **Account Management** - Multiple account support with balance tracking
-- 🏷️ **Category Organization** - Customizable expense and income categories
-- 📈 **Transaction Tracking** - Detailed transaction history with filtering
+Failures are handled using the Failure pattern:
 
----
+```dart
+class ServerFailure extends Failure { ... }
+class CacheFailure extends Failure { ... }
+class NetworkFailure extends Failure { }
+class AuthFailure extends Failure { ... }
+class ValidationFailure extends Failure { ... }
+```
 
-## ️ Technology Used
+Use `dartz` library's `Either` type for error handling:
+```dart
+Either<Failure, User> result = await loginUseCase.call(email, password);
+```
 
-### **Core Framework**
-- **[Flutter](https://flutter.dev/)** - Cross-platform mobile development framework
-- **[Dart](https://dart.dev/)** - Programming language for Flutter development
+## Dependency Injection
 
-### **State Management & Architecture**
-- **[Riverpod](https://riverpod.dev/)** - State management and dependency injection
-- **[Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)** - Separation of concerns with domain, data, and presentation layers
-- **[Repository Pattern](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design)** - Data access abstraction
+Uses `get_it` for service locator pattern:
 
-### **Networking & API**
-- **[Dio](https://pub.dev/packages/dio)** - HTTP client for API communication
-- **[GoRouter](https://pub.dev/packages/go_router)** - Declarative routing solution
+```dart
+getIt.registerSingleton<AuthRepository>(
+  AuthRepositoryImpl(
+    remoteDataSource: getIt<AuthRemoteDataSource>(),
+    localDataSource: getIt<AuthLocalDataSource>(),
+  ),
+);
+```
 
-### **Data Management**
-- **[SharedPreferences](https://pub.dev/packages/shared_preferences)** - Local data persistence
-- **[Flutter Secure Storage](https://pub.dev/packages/flutter_secure_storage)** - Secure token storage
-- **[Hive](https://pub.dev/packages/hive_flutter)** - Local database for caching
+## Key Entities
 
-### **UI/UX Libraries**
-- **[Flutter Animate](https://pub.dev/packages/flutter_animate)** - Smooth animations and transitions
-- **[FL Chart](https://pub.dev/packages/fl_chart)** - Beautiful charts and graphs
-- **[Google Fonts](https://pub.dev/packages/google_fonts)** - Typography enhancement
+### User
+- id, firstName, lastName, email, picture
 
-### **Development Tools**
-- **[Build Runner](https://pub.dev/packages/build_runner)** - Code generation
-- **[Riverpod Generator](https://pub.dev/packages/riverpod_generator)** - Automatic provider generation
-- **[Logger](https://pub.dev/packages/logger)** - Debugging and logging
-- **[Alice](https://pub.dev/packages/alice)** - HTTP inspector for debugging
+### Account
+- id, name, description, icon, color, createdAt, updatedAt
 
-### **Utilities**
-- **[Equatable](https://pub.dev/packages/equatable)** - Value equality for Dart objects
-- **[Dartz](https://pub.dev/packages/dartz)** - Functional programming utilities
-- **[Get It](https://pub.dev/packages/get_it)** - Service locator for dependency injection
-- **[Intl](https://pub.dev/packages/intl)** - Internationalization and formatting
+### Category
+- id, name, description, icon, color, createdAt, updatedAt
 
----
+### Transaction
+- id, amount, type (income/expense), categoryId, accountId, date, note, createdAt, updatedAt
 
-## 🚀 Getting Started
+### TransactionSummary
+- remainingAmount, remainingChange
+- incomeAmount, incomeChange
+- expensesAmount, expensesChange
+- categories (List<CategorySummary>)
 
-### **Prerequisites**
+## Dependencies
 
-Before you begin, ensure you have the following installed:
+| Package | Purpose |
+|---------|---------|
+| `flutter_riverpod` | State management |
+| `go_router` | Navigation |
+| `dio` | HTTP client |
+| `hive_flutter` | Local storage |
+| `get_it` | Dependency injection |
+| `dartz` | Functional programming (Either) |
+| `equatable` | Value equality |
+| `go_router` | Navigation |
+| `fl_chart` | Charts for dashboard |
+| `google_fonts` | Typography |
+| `flutter_secure_storage` | Secure token storage |
 
-- **Flutter SDK** (3.7.2 or higher) - [Install Flutter](https://docs.flutter.dev/get-started/install)
-- **Dart SDK** (included with Flutter)
-- **Android Studio** or **VS Code** with Flutter extensions
-- **Git** for version control
+## Setup
 
-### **Installation**
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ekady/expense_gem_mobile.git
-   cd expense_gem_mobile
-   ```
-
-2. **Install dependencies**
+1. Install Flutter dependencies:
    ```bash
    flutter pub get
    ```
 
-3. **Set up environment variables**
-   ```bash
-   # Edit .env with your configuration
-   # Add your API base URL and other environment-specific variables
+2. Configure environment variables in `.env`:
+   ```
+   BACKEND_URL=your_api_url
    ```
 
-4. **Generate code**
+3. Run code generation (after modifying providers):
    ```bash
    flutter pub run build_runner build --delete-conflicting-outputs
    ```
 
-5. **Run the application**
+4. Run the app:
    ```bash
-   # For development
    flutter run
-   
-   # For specific platform
-   flutter run -d android
-   flutter run -d ios
    ```
 
-### **Project Structure**
-
-```
-lib/
-├── config/                 # App configuration (theme, router, env)
-├── core/                   # Core utilities and shared code
-│   ├── entities/          # Shared domain entities
-│   ├── error/             # Error handling
-│   ├── services/          # Service locator
-│   └── utils/             # Utility functions
-└── features/              # Feature-based modules
-    ├── auth/              # Authentication feature
-    ├── accounts/          # Account management
-    ├── categories/        # Category management
-    ├── transactions/      # Transaction tracking
-    ├── dashboard/         # Dashboard analytics
-    ├── profile/           # User profile
-    └── settings/          # App settings
-```
-
----
-
-
-### **Build for Production**
+## Building
 
 ```bash
-# Android
-flutter build apk --release
+# Android APK
+flutter build apk
 
 # iOS
-flutter build ios --release
+flutter build ios
+
+# Release mode
+flutter run --release
 ```
 
----
+## Testing
 
-## 🤝 How to Contribute
+```bash
+# Run all tests
+flutter test
 
-We welcome contributions from the community! Here's how you can help:
+# Run specific test file
+flutter test test/file_test.dart
 
-### **Ways to Contribute**
+# Run test by name
+flutter test --plain-name "test name"
+```
 
-- 🐛 **Report Bugs** - Found a bug? Open an issue with detailed information
--  **Suggest Features** - Have an idea? We'd love to hear it!
-- 📝 **Improve Documentation** - Help make our docs better
-- 🔧 **Submit Code** - Fix bugs or add new features
+## Code Generation
 
-### **Development Workflow**
+After modifying Riverpod annotated classes:
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
 
-1. **Fork the repository**
-   ```bash
-   # Click the "Fork" button on GitHub
-   ```
+## Analysis
 
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+```bash
+# Analyze code
+flutter analyze
 
-3. **Make your changes**
-   - Follow the existing code style and patterns
-   - Write tests for new functionality
-   - Update documentation as needed
+# Auto-fix issues
+flutter fix
+```
 
-4. **Test your changes**
-   ```bash
-   flutter test
-   flutter analyze
-   ```
+## Environment Variables
 
-5. **Commit your changes**
-   ```bash
-   git commit -m "feat: add new feature description"
-   ```
+Store in `.env` file:
+```bash
+BACKEND_URL=https://api.example.com
+```
 
-6. **Push to your fork**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-7. **Create a Pull Request**
-   - Provide a clear description of your changes
-   - Reference any related issues
-   - Include screenshots for UI changes
-
-### **Code Style Guidelines**
-
-- Follow [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style)
-- Use meaningful variable and function names
-- Write comprehensive comments for complex logic
-- Ensure all tests pass before submitting
-
-### **Issue Guidelines**
-
-When reporting issues, please include:
-- Flutter and Dart version
-- Device/OS information
-- Steps to reproduce
-- Expected vs actual behavior
-- Screenshots (if applicable)
+Access via `Env` class in `lib/config/env.dart`.
