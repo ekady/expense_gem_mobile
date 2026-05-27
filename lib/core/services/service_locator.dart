@@ -2,6 +2,9 @@ import 'package:expense_gem_mobile/features/accounts/data/datasources/account_lo
 import 'package:expense_gem_mobile/features/accounts/data/datasources/account_remote_data_source.dart';
 import 'package:expense_gem_mobile/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:expense_gem_mobile/features/accounts/domain/repositories/account_repository.dart';
+import 'package:expense_gem_mobile/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import 'package:expense_gem_mobile/features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:expense_gem_mobile/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:expense_gem_mobile/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:expense_gem_mobile/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:expense_gem_mobile/features/auth/data/repositories/auth_repository_impl.dart';
@@ -27,28 +30,34 @@ Future<void> setupServiceLocator() async {
   // External services
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
-  
+
   getIt.registerSingleton<FlutterSecureStorage>(const FlutterSecureStorage());
-  
-  getIt.registerSingleton<Logger>(Logger(
-    printer: PrettyPrinter(
-      methodCount: 0,
-      errorMethodCount: 5,
-      lineLength: 50,
-      colors: true,
-      printEmojis: true,
-      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+
+  getIt.registerSingleton<Logger>(
+    Logger(
+      printer: PrettyPrinter(
+        methodCount: 0,
+        errorMethodCount: 5,
+        lineLength: 50,
+        colors: true,
+        printEmojis: true,
+        dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+      ),
     ),
-  ));
-  
+  );
+
   // Network
-  getIt.registerSingleton<Dio>(Dio(BaseOptions(
-    baseUrl: Env.backendUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-    headers: {'Content-Type': 'application/json; charset=UTF-8'},
-  )));
-  
+  getIt.registerSingleton<Dio>(
+    Dio(
+      BaseOptions(
+        baseUrl: Env.backendUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      ),
+    ),
+  );
+
   // Auth Data sources
   getIt.registerSingleton<AuthLocalDataSource>(
     AuthLocalDataSourceImpl(
@@ -56,69 +65,55 @@ Future<void> setupServiceLocator() async {
       sharedPreferences: getIt<SharedPreferences>(),
     ),
   );
-  
+
   getIt.registerSingleton<AuthRemoteDataSource>(
-    AuthRemoteDataSourceImpl(
-      dio: getIt<Dio>(),
-      logger: getIt<Logger>(),
-    ),
+    AuthRemoteDataSourceImpl(dio: getIt<Dio>(), logger: getIt<Logger>()),
   );
-  
+
   // Account Data sources
   getIt.registerSingleton<AccountLocalDataSource>(
-    AccountLocalDataSourceImpl(
-      sharedPreferences: getIt<SharedPreferences>(),
-    ),
+    AccountLocalDataSourceImpl(sharedPreferences: getIt<SharedPreferences>()),
   );
-  
+
   getIt.registerSingleton<AccountRemoteDataSource>(
-    AccountRemoteDataSourceImpl(
-      dio: getIt<Dio>(),
-      logger: getIt<Logger>(),
-    ),
+    AccountRemoteDataSourceImpl(dio: getIt<Dio>(), logger: getIt<Logger>()),
   );
-  
+
   // Category Data sources
   getIt.registerSingleton<CategoryLocalDataSource>(
-    CategoryLocalDataSourceImpl(
-      sharedPreferences: getIt<SharedPreferences>(),
-    ),
+    CategoryLocalDataSourceImpl(sharedPreferences: getIt<SharedPreferences>()),
   );
-  
+
   getIt.registerSingleton<CategoryRemoteDataSource>(
-    CategoryRemoteDataSourceImpl(
-      dio: getIt<Dio>(),
-      logger: getIt<Logger>(),
-    ),
+    CategoryRemoteDataSourceImpl(dio: getIt<Dio>(), logger: getIt<Logger>()),
   );
-  
+
   // Transaction Data sources
   getIt.registerSingleton<TransactionLocalDataSource>(
     TransactionLocalDataSourceImpl(
       sharedPreferences: getIt<SharedPreferences>(),
     ),
   );
-  
+
   getIt.registerSingleton<TransactionRemoteDataSource>(
-    TransactionRemoteDataSourceImpl(
-      dio: getIt<Dio>(),
-      logger: getIt<Logger>(),
-    ),
+    TransactionRemoteDataSourceImpl(dio: getIt<Dio>(), logger: getIt<Logger>()),
   );
-  
+
   // Register AuthInterceptor for automatic token refresh and logout
   final authInterceptor = AuthInterceptor(
-      getIt<Dio>(),
-      getIt<AuthLocalDataSource>(),
-      getIt<AuthRemoteDataSource>(),
+    getIt<Dio>(),
+    getIt<AuthLocalDataSource>(),
+    getIt<AuthRemoteDataSource>(),
   );
-  
+
   getIt.registerSingleton<AuthInterceptor>(authInterceptor);
   getIt<Dio>().interceptors.add(authInterceptor);
-  
+
   // Debug: Log that interceptor was added
-  getIt<Logger>().d('AuthInterceptor added to Dio. Total interceptors: ${getIt<Dio>().interceptors.length}');
-  
+  getIt<Logger>().d(
+    'AuthInterceptor added to Dio. Total interceptors: ${getIt<Dio>().interceptors.length}',
+  );
+
   // Repositories
   getIt.registerSingleton<AuthRepository>(
     AuthRepositoryImpl(
@@ -126,25 +121,39 @@ Future<void> setupServiceLocator() async {
       localDataSource: getIt<AuthLocalDataSource>(),
     ),
   );
-  
+
   getIt.registerSingleton<AccountRepository>(
     AccountRepositoryImpl(
       remoteDataSource: getIt<AccountRemoteDataSource>(),
       localDataSource: getIt<AccountLocalDataSource>(),
     ),
   );
-  
+
   getIt.registerSingleton<CategoryRepository>(
     CategoryRepositoryImpl(
       remoteDataSource: getIt<CategoryRemoteDataSource>(),
       localDataSource: getIt<CategoryLocalDataSource>(),
     ),
   );
-  
+
   getIt.registerSingleton<TransactionRepository>(
     TransactionRepositoryImpl(
       remoteDataSource: getIt<TransactionRemoteDataSource>(),
       localDataSource: getIt<TransactionLocalDataSource>(),
+    ),
+  );
+
+  // Dashboard Data sources
+  getIt.registerSingleton<DashboardRemoteDataSource>(
+    DashboardRemoteDataSourceImpl(
+      dio: getIt<Dio>(),
+      logger: getIt<Logger>(),
+    ),
+  );
+
+  getIt.registerSingleton<DashboardRepository>(
+    DashboardRepositoryImpl(
+      remoteDataSource: getIt<DashboardRemoteDataSource>(),
     ),
   );
 }

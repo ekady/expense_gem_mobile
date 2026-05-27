@@ -1,14 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import '../../domain/entities/transaction_summary.dart';
 
 abstract class DashboardRemoteDataSource {
   Future<TransactionSummary> getSummary({
-    String? categoryId,
     String? accountId,
-    DateTime? startDate,
-    DateTime? endDate,
-    int? amountType,
+    DateTime? from,
+    DateTime? to,
   });
 }
 
@@ -20,21 +19,21 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Future<TransactionSummary> getSummary({
-    String? categoryId,
     String? accountId,
-    DateTime? startDate,
-    DateTime? endDate,
-    int? amountType,
+    DateTime? from,
+    DateTime? to,
   }) async {
     try {
-      final queryParameters = {
-        if (categoryId != null) 'categoryId': categoryId,
-        if (accountId != null) 'accountId': accountId,
-        if (startDate != null) 'startDate': startDate.toIso8601String(),
-        if (endDate != null) 'endDate': endDate.toIso8601String(),
-        if (amountType != null) 'amountType': amountType,
+      final dateFormat = DateFormat('yyyy-MM-dd');
+      final queryParameters = <String, dynamic>{
+        if (from != null) 'from': dateFormat.format(from),
+        if (to != null) 'to': dateFormat.format(to),
+        if (accountId != null && accountId.isNotEmpty) 'accountId': accountId,
       };
-      final response = await dio.get('/transaction-summary', queryParameters: queryParameters);
+      final response = await dio.get(
+        '/transaction-summary',
+        queryParameters: queryParameters,
+      );
       return TransactionSummary.fromJson(response.data);
     } on DioException catch (e) {
       logger.e('Get dashboard summary error: ${e.message}');
@@ -44,4 +43,4 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       rethrow;
     }
   }
-} 
+}

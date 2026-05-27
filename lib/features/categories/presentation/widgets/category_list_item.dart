@@ -16,7 +16,7 @@ class CategoryListItem extends StatelessWidget {
     // Convert hex to color
     Color categoryColor = Theme.of(context).primaryColor;
     try {
-      if (category.color != null && category.color.isNotEmpty) {
+      if (category.color.isNotEmpty) {
         final hexCode = category.color.replaceFirst('#', '');
         categoryColor = Color(int.parse('FF$hexCode', radix: 16));
       }

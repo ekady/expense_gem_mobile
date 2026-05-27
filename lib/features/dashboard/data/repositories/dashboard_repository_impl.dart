@@ -9,18 +9,14 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   @override
   Future<TransactionSummary> getSummary({
-    String? categoryId,
     String? accountId,
-    DateTime? startDate,
-    DateTime? endDate,
-    int? amountType,
+    DateTime? from,
+    DateTime? to,
   }) async {
     return await remoteDataSource.getSummary(
-      categoryId: categoryId,
       accountId: accountId,
-      startDate: startDate,
-      endDate: endDate,
-      amountType: amountType,
+      from: from,
+      to: to,
     );
   }
-} 
+}

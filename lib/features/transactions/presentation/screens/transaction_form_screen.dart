@@ -10,13 +10,14 @@ import '../../../categories/presentation/providers/category_providers.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
 
-class TransactionFormScreen extends ConsumerStatefulWidget {  
+class TransactionFormScreen extends ConsumerStatefulWidget {
   final String? transactionId;
 
   const TransactionFormScreen({super.key, this.transactionId});
 
   @override
-  ConsumerState<TransactionFormScreen> createState() => _TransactionFormScreenState();
+  ConsumerState<TransactionFormScreen> createState() =>
+      _TransactionFormScreenState();
 }
 
 class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
@@ -24,7 +25,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   final _payeeController = TextEditingController();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   String _selectedTransactionType = 'expense';
   String? _selectedAccountId;
   String? _selectedCategoryId;
@@ -47,7 +48,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
   void _loadTransactionData() {
     if (widget.transactionId != null) {
-      final transactionAsync = ref.read(transactionProvider(widget.transactionId!));
+      final transactionAsync = ref.read(
+        transactionProvider(widget.transactionId!),
+      );
       transactionAsync.whenData((transaction) {
         if (mounted) {
           _payeeController.text = transaction.payee ?? '';
@@ -84,7 +87,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             _selectedDate = transaction.date ?? DateTime.now();
           }
         }
-        
+
         // Handle successful operations only when loading
         if (_isLoading) {
           if (transaction != null) {
@@ -149,7 +152,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.transactionId == null ? 'Create Transaction' : 'Edit Transaction',
+          widget.transactionId == null
+              ? 'Create Transaction'
+              : 'Edit Transaction',
         ),
         actions: [
           if (widget.transactionId != null)
@@ -187,8 +192,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      _selectedTransactionType == 'income' 
-                          ? Icons.trending_up 
+                      _selectedTransactionType == 'income'
+                          ? Icons.trending_up
                           : Icons.trending_down,
                       color: Colors.white,
                       size: 24,
@@ -203,17 +208,21 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                           widget.transactionId == null
                               ? 'Create Transaction'
                               : 'Edit Transaction',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _selectedTransactionType == 'income' 
+                          _selectedTransactionType == 'income'
                               ? 'Record your income'
                               : 'Record your expense',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
                             color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
@@ -311,7 +320,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               maxLines: 3,
               decoration: const InputDecoration(
                 labelText: 'Notes (Optional)',
-                hintText: 'Add any additional details about this transaction...',
+                hintText:
+                    'Add any additional details about this transaction...',
                 prefixIcon: Icon(Icons.note),
                 border: OutlineInputBorder(),
               ),
@@ -330,21 +340,22 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        widget.transactionId == null
-                            ? 'Create Transaction'
-                            : 'Update Transaction',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : Text(
+                          widget.transactionId == null
+                              ? 'Create Transaction'
+                              : 'Update Transaction',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
               ),
             ),
           ],
@@ -359,60 +370,48 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       children: [
         Text(
           'Transaction Type',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Flexible(
-              child: RadioListTile<String>(
-                title: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_down,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('Expense'),
-                  ],
+        RadioGroup<String>(
+          groupValue: _selectedTransactionType,
+          onChanged: (value) {
+            if (value != null) {
+              setState(() => _selectedTransactionType = value);
+            }
+          },
+          child: Row(
+            children: [
+              Flexible(
+                child: RadioListTile<String>(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.trending_down, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      Text('Expense'),
+                    ],
+                  ),
+                  value: 'expense',
+                  contentPadding: EdgeInsets.zero,
                 ),
-                value: 'expense',
-                groupValue: _selectedTransactionType,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedTransactionType = value!;
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
               ),
-            ),
-            Flexible(
-              child: RadioListTile<String>(
-                title: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_up,
-                      color: Colors.green,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('Income'),
-                  ],
+              Flexible(
+                child: RadioListTile<String>(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.trending_up, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text('Income'),
+                    ],
+                  ),
+                  value: 'income',
+                  contentPadding: EdgeInsets.zero,
                 ),
-                value: 'income',
-                groupValue: _selectedTransactionType,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedTransactionType = value!;
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -420,48 +419,53 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
   Widget _buildAccountSelector() {
     final accountsAsync = ref.watch(accountsProvider);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Account *',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         accountsAsync.when(
           data: (accounts) {
             return DropdownButtonFormField<String>(
-              value: _selectedAccountId,
+              isExpanded: true,
+              initialValue:
+                  accounts.any((a) => a.id == _selectedAccountId)
+                      ? _selectedAccountId
+                      : null,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.account_balance_wallet),
                 border: OutlineInputBorder(),
               ),
               hint: const Text('Select Account'),
-              items: accounts.map((account) {
-                return DropdownMenuItem<String>(
-                  value: account.id,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _getIconData(account.icon),
-                        size: 20,
-                        color: _getAccountColor(account.color),
+              items:
+                  accounts.map((account) {
+                    return DropdownMenuItem<String>(
+                      value: account.id,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getIconData(account.icon),
+                            size: 20,
+                            color: _getAccountColor(account.color),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              account.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          account.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedAccountId = value;
@@ -484,56 +488,61 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
   Widget _buildCategorySelector() {
     final categoriesAsync = ref.watch(categoriesProvider);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Category *',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         categoriesAsync.when(
           data: (categories) {
             return DropdownButtonFormField<String>(
-              value: _selectedCategoryId,
+              isExpanded: true,
+              initialValue:
+                  categories.any((c) => c.id == _selectedCategoryId)
+                      ? _selectedCategoryId
+                      : null,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.category),
                 border: OutlineInputBorder(),
               ),
               hint: const Text('Select Category'),
-              items: categories.map((category) {
-                Color categoryColor = Theme.of(context).primaryColor;
-                try {
-                  final hexCode = category.color.replaceFirst('#', '');
-                  categoryColor = Color(int.parse('FF$hexCode', radix: 16));
-                } catch (e) {
-                  // Use default if parsing fails
-                }
-                
-                return DropdownMenuItem<String>(
-                  value: category.id,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _getIconData(category.icon),
-                        size: 20,
-                        color: categoryColor,
+              items:
+                  categories.map((category) {
+                    Color categoryColor = Theme.of(context).primaryColor;
+                    try {
+                      final hexCode = category.color.replaceFirst('#', '');
+                      categoryColor = Color(int.parse('FF$hexCode', radix: 16));
+                    } catch (e) {
+                      // Use default if parsing fails
+                    }
+
+                    return DropdownMenuItem<String>(
+                      value: category.id,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getIconData(category.icon),
+                            size: 20,
+                            color: categoryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              category.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          category.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedCategoryId = value;
@@ -589,16 +598,18 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     // Parse amount and apply sign based on transaction type
     final amount = double.parse(_amountController.text);
-    final finalAmount = _selectedTransactionType == 'expense' ? -amount : amount;
+    final finalAmount =
+        _selectedTransactionType == 'expense' ? -amount : amount;
 
     // For new transactions, we need to create a temporary transaction with the IDs
     // The API will handle the full object creation
     final transaction = Transaction(
       id: widget.transactionId ?? '',
       payee: _payeeController.text.trim(),
-      notes: _notesController.text.trim().isEmpty 
-          ? null 
-          : _notesController.text.trim(),
+      notes:
+          _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
       amount: finalAmount,
       date: _selectedDate,
       type: _selectedTransactionType,
@@ -616,9 +627,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         icon: '',
         color: '',
       ),
-      createdAt: widget.transactionId != null 
-          ? DateTime.now() 
-          : DateTime.now(),
+      createdAt: widget.transactionId != null ? DateTime.now() : DateTime.now(),
     );
 
     // Call the provider method - success/error will be handled in build method
@@ -632,23 +641,24 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Transaction'),
-        content: const Text(
-          'Are you sure you want to delete this transaction?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Transaction'),
+            content: const Text(
+              'Are you sure you want to delete this transaction?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {

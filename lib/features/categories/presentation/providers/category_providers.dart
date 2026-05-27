@@ -147,8 +147,9 @@ class CategoriesInfiniteScrollNotifier extends AsyncNotifier<List<Category>> {
   @override
   Future<List<Category>> build() async {
     _currentPage = 1;
-    _hasMoreData = true;
+    _isLoading = false;
     final initial = await _fetchPage(_currentPage);
+    _hasMoreData = initial.length >= _pageSize;
     return initial;
   }
 
@@ -157,9 +158,10 @@ class CategoriesInfiniteScrollNotifier extends AsyncNotifier<List<Category>> {
     _isLoading = true;
     _currentPage++;
     final nextPage = await _fetchPage(_currentPage);
-    if (nextPage.isEmpty) {
+    if (nextPage.length < _pageSize) {
       _hasMoreData = false;
-    } else {
+    }
+    if (nextPage.isNotEmpty) {
       state = AsyncValue.data([...?state.value, ...nextPage]);
     }
     _isLoading = false;
