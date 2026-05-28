@@ -2,6 +2,12 @@
 
 A Flutter mobile application for personal expense tracking with Clean Architecture, Riverpod state management, and Hive local storage.
 
+## Screenshots
+
+| Login | Dashboard |
+|-------|-----------|
+| ![Login screen](docs/assets/login_screen.png) | ![Dashboard screen](docs/assets/dashboard_screen.png) |
+
 ## Features
 
 - **Authentication**: Login, Signup, Forgot Password, OTP Validation, Password Reset
