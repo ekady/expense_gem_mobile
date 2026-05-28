@@ -7,10 +7,12 @@ class AccountSelectionScreen extends ConsumerStatefulWidget {
   const AccountSelectionScreen({super.key, this.selectedAccountId});
 
   @override
-  ConsumerState<AccountSelectionScreen> createState() => _AccountSelectionScreenState();
+  ConsumerState<AccountSelectionScreen> createState() =>
+      _AccountSelectionScreenState();
 }
 
-class _AccountSelectionScreenState extends ConsumerState<AccountSelectionScreen> {
+class _AccountSelectionScreenState
+    extends ConsumerState<AccountSelectionScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMore = false;
 
@@ -28,11 +30,14 @@ class _AccountSelectionScreenState extends ConsumerState<AccountSelectionScreen>
 
   void _onScroll() {
     if (_isLoadingMore) return;
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
       final notifier = ref.read(accountsInfiniteScrollProvider.notifier);
       if (notifier.hasMoreData) {
         setState(() => _isLoadingMore = true);
-        notifier.loadNextPage().whenComplete(() => setState(() => _isLoadingMore = false));
+        notifier.loadNextPage().whenComplete(
+          () => setState(() => _isLoadingMore = false),
+        );
       }
     }
   }
@@ -51,23 +56,27 @@ class _AccountSelectionScreenState extends ConsumerState<AccountSelectionScreen>
         ],
       ),
       body: accountsAsync.when(
-        data: (accounts) => ListView.builder(
-          controller: _scrollController,
-          itemCount: accounts.length,
-          itemBuilder: (context, index) {
-            final account = accounts[index];
-            final isSelected = account.id == widget.selectedAccountId;
-            return ListTile(
-              title: Text(account.name),
-              selected: isSelected,
-              trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () => Navigator.of(context).pop(account),
-            );
-          },
-        ),
+        data:
+            (accounts) => ListView.builder(
+              controller: _scrollController,
+              itemCount: accounts.length,
+              itemBuilder: (context, index) {
+                final account = accounts[index];
+                final isSelected = account.id == widget.selectedAccountId;
+                return ListTile(
+                  title: Text(account.name),
+                  selected: isSelected,
+                  trailing:
+                      isSelected
+                          ? const Icon(Icons.check, color: Colors.green)
+                          : null,
+                  onTap: () => Navigator.of(context).pop(account),
+                );
+              },
+            ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load accounts')), 
+        error: (e, _) => Center(child: Text('Failed to load accounts')),
       ),
     );
   }
-} 
+}

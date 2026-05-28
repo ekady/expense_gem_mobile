@@ -12,7 +12,8 @@ class AccountsScreen extends ConsumerStatefulWidget {
   ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
 }
 
-class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBindingObserver {
+class _AccountsScreenState extends ConsumerState<AccountsScreen>
+    with WidgetsBindingObserver {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMore = false;
   bool _hasInitialized = false;
@@ -61,7 +62,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
 
   void _onScroll() {
     if (_isLoadingMore) return; // Prevent multiple calls while loading
-    
+
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 100) {
       final accountsState = ref.read(accountsInfiniteScrollProvider.notifier);
@@ -69,20 +70,23 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
         setState(() {
           _isLoadingMore = true;
         });
-        
-        accountsState.loadNextPage().then((_) {
-          if (mounted) {
-            setState(() {
-              _isLoadingMore = false;
+
+        accountsState
+            .loadNextPage()
+            .then((_) {
+              if (mounted) {
+                setState(() {
+                  _isLoadingMore = false;
+                });
+              }
+            })
+            .catchError((_) {
+              if (mounted) {
+                setState(() {
+                  _isLoadingMore = false;
+                });
+              }
             });
-          }
-        }).catchError((_) {
-          if (mounted) {
-            setState(() {
-              _isLoadingMore = false;
-            });
-          }
-        });
       }
     }
   }
@@ -112,7 +116,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(accountsInfiniteScrollProvider.notifier).refresh(),
+        onRefresh:
+            () => ref.read(accountsInfiniteScrollProvider.notifier).refresh(),
         child: accountsAsync.when(
           data: (accounts) {
             if (accounts.isEmpty) {
@@ -123,7 +128,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
                     Icon(
                       Icons.account_balance_wallet_outlined,
                       size: 80,
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -156,13 +163,13 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
               itemBuilder: (context, index) {
                 if (index == accounts.length) {
                   // Show loading indicator at the bottom
-                  final accountsState = ref.read(accountsInfiniteScrollProvider.notifier);
+                  final accountsState = ref.read(
+                    accountsInfiniteScrollProvider.notifier,
+                  );
                   if (accountsState.hasMoreData) {
                     return const Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   } else {
                     return const SizedBox.shrink();
@@ -184,36 +191,41 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> with WidgetsBin
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
+          error:
+              (error, stackTrace) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 80,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading accounts',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      error.toString(),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref
+                            .read(accountsInfiniteScrollProvider.notifier)
+                            .refresh();
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading accounts',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    ref.read(accountsInfiniteScrollProvider.notifier).refresh();
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
+              ),
         ),
       ),
     );

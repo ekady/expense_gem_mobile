@@ -12,4 +12,4 @@ class GetCategoryByIdUseCase {
   Future<Either<Failure, Category>> call(String id) async {
     return await repository.getCategoryById(id);
   }
-} 
+}

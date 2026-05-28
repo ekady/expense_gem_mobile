@@ -12,4 +12,4 @@ class UpdateCategoryUseCase {
   Future<Either<Failure, Category>> call(Category category) async {
     return await repository.updateCategory(category);
   }
-} 
+}

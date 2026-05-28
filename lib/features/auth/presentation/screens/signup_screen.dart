@@ -33,37 +33,37 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   void _setupListeners() {
-    ref.listenManual<AsyncValue<User?>>(
-      registerFormStateProvider,
-      (previous, next) {
-        next.whenOrNull(
-          error: (error, _) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(error.toString()),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-              );
-            }
-          },
-          data: (user) {
-            if (mounted && user != null) {
-              // Clear form fields
-              _clearFormFields();
-              
-              // Show success message
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Registration successful, login to continue'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            }
-          },
-        );
-      },
-    );
+    ref.listenManual<AsyncValue<User?>>(registerFormStateProvider, (
+      previous,
+      next,
+    ) {
+      next.whenOrNull(
+        error: (error, _) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error.toString()),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
+        data: (user) {
+          if (mounted && user != null) {
+            // Clear form fields
+            _clearFormFields();
+
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registration successful, login to continue'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        },
+      );
+    });
   }
 
   void _clearFormFields() {
@@ -90,13 +90,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   void _register() {
     if (_formKey.currentState!.validate()) {
-      ref.read(registerFormStateProvider.notifier).register(
-        _firstNameController.text.trim(),
-        _lastNameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text,
-        _confirmPasswordController.text,
-      );
+      ref
+          .read(registerFormStateProvider.notifier)
+          .register(
+            _firstNameController.text.trim(),
+            _lastNameController.text.trim(),
+            _emailController.text.trim(),
+            _passwordController.text,
+            _confirmPasswordController.text,
+          );
     }
   }
 
@@ -106,9 +108,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final isLoading = registerFormState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Account'),
-      ),
+      appBar: AppBar(title: const Text('Create Account')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

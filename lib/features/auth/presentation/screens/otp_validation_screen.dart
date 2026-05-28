@@ -14,7 +14,8 @@ class OtpValidationScreen extends ConsumerStatefulWidget {
   const OtpValidationScreen({super.key, required this.email});
 
   @override
-  ConsumerState<OtpValidationScreen> createState() => _OtpValidationScreenState();
+  ConsumerState<OtpValidationScreen> createState() =>
+      _OtpValidationScreenState();
 }
 
 class _OtpValidationScreenState extends ConsumerState<OtpValidationScreen> {
@@ -55,7 +56,9 @@ class _OtpValidationScreenState extends ConsumerState<OtpValidationScreen> {
 
   void _resendOtp() {
     if (_remainingSeconds == 0) {
-      ref.read(forgotPasswordFormStateProvider.notifier).forgotPassword(widget.email);
+      ref
+          .read(forgotPasswordFormStateProvider.notifier)
+          .forgotPassword(widget.email);
       _startResendTimer();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -68,10 +71,9 @@ class _OtpValidationScreenState extends ConsumerState<OtpValidationScreen> {
 
   void _validateOtp() {
     if (_formKey.currentState!.validate()) {
-      ref.read(validateOtpFormStateProvider.notifier).validateOtp(
-        widget.email,
-        _otpController.text.trim(),
-      );
+      ref
+          .read(validateOtpFormStateProvider.notifier)
+          .validateOtp(widget.email, _otpController.text.trim());
     }
   }
 
@@ -92,19 +94,17 @@ class _OtpValidationScreenState extends ConsumerState<OtpValidationScreen> {
         },
         data: (token) {
           if (token != null) {
-            context.go('/reset-password', extra: {
-              'email': widget.email,
-              'token': token,
-            });
+            context.go(
+              '/reset-password',
+              extra: {'email': widget.email, 'token': token},
+            );
           }
         },
       );
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('OTP Validation'),
-      ),
+      appBar: AppBar(title: const Text('OTP Validation')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -182,4 +182,4 @@ class _OtpValidationScreenState extends ConsumerState<OtpValidationScreen> {
       ),
     );
   }
-} 
+}

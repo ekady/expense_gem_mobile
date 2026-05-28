@@ -40,14 +40,15 @@ DeleteAccountUseCase deleteAccountUseCase(Ref ref) {
 
 // Paginated accounts provider
 @riverpod
-Future<Map<String, dynamic>> paginatedAccounts(Ref ref, {int page = 1, int limit = 10}) async {
+Future<Map<String, dynamic>> paginatedAccounts(
+  Ref ref, {
+  int page = 1,
+  int limit = 10,
+}) async {
   final useCase = ref.watch(getAccountsUseCaseProvider);
   final result = await useCase.call(page: page, limit: limit);
 
-  return result.fold(
-    (failure) => throw failure.message,
-    (data) => data,
-  );
+  return result.fold((failure) => throw failure.message, (data) => data);
 }
 
 // Accounts provider (for backward compatibility - gets first page)
@@ -93,20 +94,24 @@ class AccountsInfiniteScroll extends _$AccountsInfiniteScroll {
 
   Future<void> loadNextPage() async {
     if (_isLoadingMore) return; // Prevent duplicate calls
-    
+
     _isLoadingMore = true;
-    
+
     try {
       final currentAccounts = state.value ?? [];
-      
+
       final useCase = ref.read(getAccountsUseCaseProvider);
-      final result = await useCase.call(page: (currentAccounts.length / 10).ceil() + 1, limit: 10);
+      final result = await useCase.call(
+        page: (currentAccounts.length / 10).ceil() + 1,
+        limit: 10,
+      );
 
       result.fold(
-        (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
+        (failure) =>
+            state = AsyncValue.error(failure.message, StackTrace.current),
         (data) {
           final newAccounts = data['accounts'] as List<Account>;
-          
+
           if (newAccounts.isNotEmpty) {
             final allAccounts = [...currentAccounts, ...newAccounts];
             state = AsyncValue.data(allAccounts);
@@ -126,7 +131,7 @@ class AccountsInfiniteScroll extends _$AccountsInfiniteScroll {
 
   bool get hasMoreData {
     if (_isLoadingMore) return false; // Don't load more if already loading
-    
+
     final currentAccounts = state.value ?? [];
     // This is a simplified check - in a real app, you'd store pagination info
     return currentAccounts.length % 10 == 0 && currentAccounts.isNotEmpty;
@@ -162,9 +167,10 @@ class AccountFormState extends _$AccountFormState {
   Future<void> saveAccount(Account account) async {
     state = const AsyncValue.loading();
 
-    final result = account.id.isEmpty
-        ? await ref.read(createAccountUseCaseProvider).call(account)
-        : await ref.read(updateAccountUseCaseProvider).call(account);
+    final result =
+        account.id.isEmpty
+            ? await ref.read(createAccountUseCaseProvider).call(account)
+            : await ref.read(updateAccountUseCaseProvider).call(account);
 
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
@@ -172,10 +178,10 @@ class AccountFormState extends _$AccountFormState {
         // Invalidate and refresh all account-related providers
         ref.invalidate(accountsProvider);
         ref.invalidate(paginatedAccountsProvider);
-        
+
         // Refresh the infinite scroll provider to get fresh data
         ref.read(accountsInfiniteScrollProvider.notifier).refresh();
-        
+
         return AsyncValue.data(savedAccount);
       },
     );
@@ -195,10 +201,10 @@ class AccountFormState extends _$AccountFormState {
         // Invalidate and refresh all account-related providers
         ref.invalidate(accountsProvider);
         ref.invalidate(paginatedAccountsProvider);
-        
+
         // Refresh the infinite scroll provider to get fresh data
         ref.read(accountsInfiniteScrollProvider.notifier).refresh();
-        
+
         state = const AsyncValue.data(null);
       },
     );

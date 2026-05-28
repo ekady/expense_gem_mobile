@@ -60,11 +60,14 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
 
   void _onScroll() {
     if (_isLoadingMore) return;
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
       final notifier = ref.read(categoriesInfiniteScrollProvider.notifier);
       if (notifier.hasMoreData) {
         setState(() => _isLoadingMore = true);
-        notifier.loadNextPage().whenComplete(() => setState(() => _isLoadingMore = false));
+        notifier.loadNextPage().whenComplete(
+          () => setState(() => _isLoadingMore = false),
+        );
       }
     }
   }
@@ -102,7 +105,9 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
               return _buildEmptyState();
             }
 
-            final notifier = ref.read(categoriesInfiniteScrollProvider.notifier);
+            final notifier = ref.read(
+              categoriesInfiniteScrollProvider.notifier,
+            );
             return ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
@@ -133,36 +138,39 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
+          error:
+              (error, stackTrace) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 80,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading categories',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      error.toString(),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.invalidate(categoriesInfiniteScrollProvider);
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading categories',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    ref.invalidate(categoriesInfiniteScrollProvider);
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
+              ),
         ),
       ),
     );

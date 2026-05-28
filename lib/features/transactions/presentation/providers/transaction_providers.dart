@@ -26,14 +26,18 @@ Future<List<Transaction>> transactions(Ref ref) async {
 
 // Paginated transactions provider
 @riverpod
-Future<Map<String, dynamic>> paginatedTransactions(Ref ref, {int page = 1, int limit = 10}) async {
+Future<Map<String, dynamic>> paginatedTransactions(
+  Ref ref, {
+  int page = 1,
+  int limit = 10,
+}) async {
   final repository = ref.watch(transactionRepositoryProvider);
-  final result = await repository.getPaginatedTransactions(page: page, limit: limit);
-
-  return result.fold(
-    (failure) => throw failure.message,
-    (data) => data,
+  final result = await repository.getPaginatedTransactions(
+    page: page,
+    limit: limit,
   );
+
+  return result.fold((failure) => throw failure.message, (data) => data);
 }
 
 // Infinite scroll transactions provider
@@ -88,17 +92,14 @@ class TransactionsInfiniteScroll extends _$TransactionsInfiniteScroll {
       endDate: endDate,
       amountType: amountType,
     );
-    return result.fold(
-      (failure) => throw failure.message,
-      (data) {
-        final transactions = data['transactions'] as List<Transaction>;
-        if (transactions.length < 10) {
-          _hasReachedEnd = true;
-        }
-        return transactions;
-      },
-    );
-    }
+    return result.fold((failure) => throw failure.message, (data) {
+      final transactions = data['transactions'] as List<Transaction>;
+      if (transactions.length < 10) {
+        _hasReachedEnd = true;
+      }
+      return transactions;
+    });
+  }
 
   Future<void> loadNextPage() async {
     if (_isLoadingMore || _hasReachedEnd) return;
@@ -116,11 +117,15 @@ class TransactionsInfiniteScroll extends _$TransactionsInfiniteScroll {
         amountType: _amountType,
       );
       result.fold(
-        (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
+        (failure) =>
+            state = AsyncValue.error(failure.message, StackTrace.current),
         (data) {
           final newTransactions = data['transactions'] as List<Transaction>;
           if (newTransactions.isNotEmpty) {
-            final allTransactions = [...currentTransactions, ...newTransactions];
+            final allTransactions = [
+              ...currentTransactions,
+              ...newTransactions,
+            ];
             state = AsyncValue.data(allTransactions);
             if (newTransactions.length < 10) {
               _hasReachedEnd = true;
@@ -145,21 +150,21 @@ class TransactionsInfiniteScroll extends _$TransactionsInfiniteScroll {
     _isLoadingMore = false;
     _hasReachedEnd = false;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _loadFirstPage(
-      categoryId: categoryId,
-      accountId: accountId,
-      startDate: startDate,
-      endDate: endDate,
-      amountType: amountType,
-    ));
+    state = await AsyncValue.guard(
+      () => _loadFirstPage(
+        categoryId: categoryId,
+        accountId: accountId,
+        startDate: startDate,
+        endDate: endDate,
+        amountType: amountType,
+      ),
+    );
   }
 
   bool get hasMoreData {
     return !_isLoadingMore && !_hasReachedEnd;
   }
 }
-
-
 
 // Single transaction provider
 @riverpod
@@ -210,12 +215,16 @@ class TransactionFormState extends _$TransactionFormState {
       (savedTransaction) {
         ref.invalidate(transactionsProvider);
         ref.invalidate(paginatedTransactionsProvider);
-        ref.read(transactionsInfiniteScrollProvider(
-          categoryId: null,
-          accountId: null,
-          startDate: null,
-          endDate: null,
-        ).notifier).refresh();
+        ref
+            .read(
+              transactionsInfiniteScrollProvider(
+                categoryId: null,
+                accountId: null,
+                startDate: null,
+                endDate: null,
+              ).notifier,
+            )
+            .refresh();
         return AsyncValue.data(savedTransaction);
       },
     );
@@ -234,12 +243,16 @@ class TransactionFormState extends _$TransactionFormState {
       (_) {
         ref.invalidate(transactionsProvider);
         ref.invalidate(paginatedTransactionsProvider);
-        ref.read(transactionsInfiniteScrollProvider(
-          categoryId: null,
-          accountId: null,
-          startDate: null,
-          endDate: null,
-        ).notifier).refresh();
+        ref
+            .read(
+              transactionsInfiniteScrollProvider(
+                categoryId: null,
+                accountId: null,
+                startDate: null,
+                endDate: null,
+              ).notifier,
+            )
+            .refresh();
         state = const AsyncValue.data(null);
       },
     );

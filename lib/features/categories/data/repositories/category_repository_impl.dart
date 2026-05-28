@@ -15,12 +15,18 @@ class CategoryRepositoryImpl implements CategoryRepository {
     required this.remoteDataSource,
     required this.localDataSource,
   });
-  
+
   @override
-  Future<Either<Failure, List<Category>>> getCategories({int page = 1, int limit = 20}) async {
+  Future<Either<Failure, List<Category>>> getCategories({
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       // Always try remote first
-      final result = await remoteDataSource.getCategories(page: page, limit: limit);
+      final result = await remoteDataSource.getCategories(
+        page: page,
+        limit: limit,
+      );
       final categories = result['categories'] as List<Category>;
       // Save to local cache
       await localDataSource.saveCategories(categories);
@@ -31,29 +37,30 @@ class CategoryRepositoryImpl implements CategoryRepository {
       if (cachedCategories.isNotEmpty) {
         return Right(cachedCategories);
       }
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
-  }
-  
-  @override
-  Future<Either<Failure, List<Category>>> getCategoriesByType(String type) async {
-    try {
-      final categoriesResult = await getCategories();
-      
-      return categoriesResult.fold(
-        (failure) => Left(failure),
-        (categories) {
-          final filtered = categories.toList();
-          return Right(filtered);
-        },
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
       );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
+  @override
+  Future<Either<Failure, List<Category>>> getCategoriesByType(
+    String type,
+  ) async {
+    try {
+      final categoriesResult = await getCategories();
+
+      return categoriesResult.fold((failure) => Left(failure), (categories) {
+        final filtered = categories.toList();
+        return Right(filtered);
+      });
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
   @override
   Future<Either<Failure, Category>> getCategoryById(String id) async {
     try {
@@ -67,12 +74,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
       if (cachedCategory != null) {
         return Right(cachedCategory);
       }
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, Category>> createCategory(Category category) async {
     try {
@@ -80,12 +89,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
       await localDataSource.saveCategory(createdCategory);
       return Right(createdCategory);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, Category>> updateCategory(Category category) async {
     try {
@@ -93,12 +104,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
       await localDataSource.saveCategory(updatedCategory);
       return Right(updatedCategory);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, void>> deleteCategory(String id) async {
     try {
@@ -106,7 +119,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
       await localDataSource.deleteCategory(id);
       return const Right(null);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

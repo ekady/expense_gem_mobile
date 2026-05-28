@@ -17,73 +17,83 @@ abstract class TransactionLocalDataSource {
 
 class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
   final SharedPreferences sharedPreferences;
-  
+
   TransactionLocalDataSourceImpl({required this.sharedPreferences});
-  
+
   static const String _transactionsKey = 'transactions';
   static const String _transactionPrefix = 'transaction_';
-  
+
   @override
   Future<void> saveTransactions(List<Transaction> transactions) async {
-    final transactionsJson = transactions.map((transaction) => _transactionToJson(transaction)).toList();
-    await sharedPreferences.setString(_transactionsKey, jsonEncode(transactionsJson));
+    final transactionsJson =
+        transactions
+            .map((transaction) => _transactionToJson(transaction))
+            .toList();
+    await sharedPreferences.setString(
+      _transactionsKey,
+      jsonEncode(transactionsJson),
+    );
   }
-  
+
   @override
   Future<List<Transaction>> getTransactions() async {
     final transactionsJson = sharedPreferences.getString(_transactionsKey);
     if (transactionsJson == null) {
       return [];
     }
-    
+
     final List<dynamic> transactionsList = jsonDecode(transactionsJson);
     return transactionsList.map((json) => _transactionFromJson(json)).toList();
   }
-  
+
   @override
   Future<void> saveTransaction(Transaction transaction) async {
     final transactions = await getTransactions();
-    final existingIndex = transactions.indexWhere((t) => t.id == transaction.id);
-    
+    final existingIndex = transactions.indexWhere(
+      (t) => t.id == transaction.id,
+    );
+
     if (existingIndex != -1) {
       transactions[existingIndex] = transaction;
     } else {
       transactions.add(transaction);
     }
-    
+
     await saveTransactions(transactions);
-    
+
     // Also save individual transaction for quick access
     await sharedPreferences.setString(
       '$_transactionPrefix${transaction.id}',
       jsonEncode(_transactionToJson(transaction)),
     );
   }
-  
+
   @override
   Future<Transaction?> getTransactionById(String id) async {
-    final transactionJson = sharedPreferences.getString('$_transactionPrefix$id');
+    final transactionJson = sharedPreferences.getString(
+      '$_transactionPrefix$id',
+    );
     if (transactionJson == null) {
       return null;
     }
-    
+
     return _transactionFromJson(jsonDecode(transactionJson));
   }
-  
+
   @override
   Future<void> deleteTransaction(String id) async {
     final transactions = await getTransactions();
     transactions.removeWhere((transaction) => transaction.id == id);
     await saveTransactions(transactions);
-    
+
     // Remove individual transaction
     await sharedPreferences.remove('$_transactionPrefix$id');
   }
-  
+
   @override
   Future<void> clearTransactions() async {
     await sharedPreferences.remove(_transactionsKey);
-    
+
     // Remove all individual transaction keys
     final keys = sharedPreferences.getKeys();
     for (final key in keys) {
@@ -92,7 +102,7 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       }
     }
   }
-  
+
   Map<String, dynamic> _transactionToJson(Transaction transaction) {
     return {
       'id': transaction.id,
@@ -101,13 +111,20 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       'amount': transaction.amount,
       'date': transaction.date?.toIso8601String(),
       'type': transaction.type,
-      'account': _accountToJson(transaction.account ?? Account(id: '', name: '', description: '', icon: '', color: '')),
-      'category': _categoryToJson(transaction.category ?? Category(id: '', name: '', description: '', icon: '', color: '')),
+      'account': _accountToJson(
+        transaction.account ??
+            Account(id: '', name: '', description: '', icon: '', color: ''),
+      ),
+      'category': _categoryToJson(
+        transaction.category ??
+            Category(id: '', name: '', description: '', icon: '', color: ''),
+      ),
       'createdAt': transaction.createdAt?.toIso8601String(),
-      if (transaction.updatedAt != null) 'updatedAt': transaction.updatedAt!.toIso8601String(),
+      if (transaction.updatedAt != null)
+        'updatedAt': transaction.updatedAt!.toIso8601String(),
     };
   }
-  
+
   Transaction _transactionFromJson(Map<String, dynamic> json) {
     return Transaction(
       id: json['id'],
@@ -118,12 +135,12 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       type: json['type'],
       account: _accountFromJson(json['account']),
       category: _categoryFromJson(json['category']),
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
-          : null,
+      createdAt:
+          json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now(),
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -134,8 +151,10 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       'description': account.description,
       'icon': account.icon,
       'color': account.color,
-      if (account.createdAt != null) 'createdAt': account.createdAt!.toIso8601String(),
-      if (account.updatedAt != null) 'updatedAt': account.updatedAt!.toIso8601String(),
+      if (account.createdAt != null)
+        'createdAt': account.createdAt!.toIso8601String(),
+      if (account.updatedAt != null)
+        'updatedAt': account.updatedAt!.toIso8601String(),
     };
   }
 
@@ -146,12 +165,10 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       description: json['description'],
       icon: json['icon'],
       color: json['color'],
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : null,
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
-          : null,
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -162,8 +179,10 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       'description': category.description,
       'icon': category.icon,
       'color': category.color,
-      if (category.createdAt != null) 'createdAt': category.createdAt!.toIso8601String(),
-      if (category.updatedAt != null) 'updatedAt': category.updatedAt!.toIso8601String(),
+      if (category.createdAt != null)
+        'createdAt': category.createdAt!.toIso8601String(),
+      if (category.updatedAt != null)
+        'updatedAt': category.updatedAt!.toIso8601String(),
     };
   }
 
@@ -174,12 +193,10 @@ class TransactionLocalDataSourceImpl implements TransactionLocalDataSource {
       description: json['description'],
       icon: json['icon'],
       color: json['color'],
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : null,
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
-          : null,
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
-} 
+}

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
+  ref,
+) {
   return ThemeModeNotifier();
 });
 
@@ -36,13 +38,13 @@ class AppTheme {
   static const Color successColor = Color(0xFF4CAF50);
   static const Color warningColor = Color(0xFFFFC107);
   static const Color errorColor = Color(0xFFE53935);
-  
+
   // Light theme colors
   static const Color lightBackgroundColor = Color(0xFFF5F5F7);
   static const Color lightCardColor = Colors.white;
   static const Color lightTextColor = Color(0xFF121212);
   static const Color lightSecondaryTextColor = Color(0xFF757575);
-  
+
   // Dark theme colors
   static const Color darkBackgroundColor = Color(0xFF121212);
   static const Color darkCardColor = Color(0xFF1E1E1E);
@@ -52,19 +54,49 @@ class AppTheme {
   // Helper method to get text theme
   static TextTheme _getTextTheme(Color textColor) {
     return GoogleFonts.interTextTheme().copyWith(
-      displayLarge: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w700),
-      displayMedium: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w700),
-      displaySmall: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w700),
-      headlineLarge: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w700),
-      headlineMedium: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w600),
-      headlineSmall: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w600),
-      titleLarge: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w500),
-      titleSmall: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w500),
+      displayLarge: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w700,
+      ),
+      displayMedium: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w700,
+      ),
+      displaySmall: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w700,
+      ),
+      headlineLarge: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w700,
+      ),
+      headlineMedium: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w600,
+      ),
+      headlineSmall: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w600,
+      ),
+      titleLarge: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w600,
+      ),
+      titleMedium: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      titleSmall: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
       bodyLarge: GoogleFonts.inter(color: textColor),
       bodyMedium: GoogleFonts.inter(color: textColor),
       bodySmall: GoogleFonts.inter(color: textColor.withValues(alpha: 0.8)),
-      labelLarge: GoogleFonts.inter(color: textColor, fontWeight: FontWeight.w500),
+      labelLarge: GoogleFonts.inter(
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
       labelMedium: GoogleFonts.inter(color: textColor),
       labelSmall: GoogleFonts.inter(color: textColor.withValues(alpha: 0.7)),
     );
@@ -93,27 +125,21 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: lightCardColor,
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primaryColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: const BorderSide(color: primaryColor, width: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
@@ -121,9 +147,7 @@ class AppTheme {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: primaryColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
     ),
@@ -178,27 +202,21 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: darkCardColor,
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColorLight,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primaryColorLight,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: const BorderSide(color: primaryColorLight, width: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
@@ -206,9 +224,7 @@ class AppTheme {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: primaryColorLight,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
     ),

@@ -6,10 +6,10 @@ import '../repositories/account_repository.dart';
 
 class GetAccountByIdUseCase {
   final AccountRepository repository;
-  
+
   GetAccountByIdUseCase(this.repository);
-  
+
   Future<Either<Failure, Account>> call(String id) {
     return repository.getAccountById(id);
   }
-} 
+}

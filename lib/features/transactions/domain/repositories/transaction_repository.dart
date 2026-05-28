@@ -14,15 +14,37 @@ abstract class TransactionRepository {
     DateTime? endDate,
     int? amountType,
   });
-  Future<Either<Failure, List<Transaction>>> getTransactionsByAccount(String accountId);
-  Future<Either<Failure, List<Transaction>>> getTransactionsByCategory(String categoryId);
+  Future<Either<Failure, List<Transaction>>> getTransactionsByAccount(
+    String accountId,
+  );
+  Future<Either<Failure, List<Transaction>>> getTransactionsByCategory(
+    String categoryId,
+  );
   Future<Either<Failure, List<Transaction>>> getTransactionsByType(String type);
-  Future<Either<Failure, List<Transaction>>> getTransactionsByDateRange(DateTime startDate, DateTime endDate);
+  Future<Either<Failure, List<Transaction>>> getTransactionsByDateRange(
+    DateTime startDate,
+    DateTime endDate,
+  );
   Future<Either<Failure, Transaction>> getTransactionById(String id);
-  Future<Either<Failure, Transaction>> createTransaction(Transaction transaction);
-  Future<Either<Failure, Transaction>> updateTransaction(Transaction transaction);
+  Future<Either<Failure, Transaction>> createTransaction(
+    Transaction transaction,
+  );
+  Future<Either<Failure, Transaction>> updateTransaction(
+    Transaction transaction,
+  );
   Future<Either<Failure, void>> deleteTransaction(String id);
-  Future<Either<Failure, Map<String, double>>> getCategoryTotals(String type, DateTime startDate, DateTime endDate);
-  Future<Either<Failure, Map<String, double>>> getAccountTotals(DateTime startDate, DateTime endDate);
-  Future<Either<Failure, Map<DateTime, double>>> getDailyTotals(String type, DateTime startDate, DateTime endDate);
+  Future<Either<Failure, Map<String, double>>> getCategoryTotals(
+    String type,
+    DateTime startDate,
+    DateTime endDate,
+  );
+  Future<Either<Failure, Map<String, double>>> getAccountTotals(
+    DateTime startDate,
+    DateTime endDate,
+  );
+  Future<Either<Failure, Map<DateTime, double>>> getDailyTotals(
+    String type,
+    DateTime startDate,
+    DateTime endDate,
+  );
 }

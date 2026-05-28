@@ -13,7 +13,7 @@ class AuthTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final Function(String)? onChanged;
   final Function(String)? onSubmitted;
-  
+
   const AuthTextField({
     super.key,
     required this.controller,
@@ -35,10 +35,7 @@ class AuthTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge,
-        ),
+        Text(label, style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,

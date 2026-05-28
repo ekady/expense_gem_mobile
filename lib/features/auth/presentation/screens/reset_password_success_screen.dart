@@ -9,9 +9,7 @@ class ResetPasswordSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Password Reset'),
-      ),
+      appBar: AppBar(title: const Text('Password Reset')),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -57,4 +55,4 @@ class ResetPasswordSuccessScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

@@ -8,7 +8,7 @@ class Account extends Equatable {
   final String? color;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  
+
   const Account({
     required this.id,
     required this.name,
@@ -18,7 +18,7 @@ class Account extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
-  
+
   Account copyWith({
     String? id,
     String? name,
@@ -38,15 +38,15 @@ class Account extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-  
+
   @override
   List<Object?> get props => [
-    id, 
-    name, 
+    id,
+    name,
     description,
-    icon, 
-    color, 
-    createdAt, 
+    icon,
+    color,
+    createdAt,
     updatedAt,
   ];
 }

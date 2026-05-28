@@ -7,10 +7,12 @@ class CategorySelectionScreen extends ConsumerStatefulWidget {
   const CategorySelectionScreen({super.key, this.selectedCategoryId});
 
   @override
-  ConsumerState<CategorySelectionScreen> createState() => _CategorySelectionScreenState();
+  ConsumerState<CategorySelectionScreen> createState() =>
+      _CategorySelectionScreenState();
 }
 
-class _CategorySelectionScreenState extends ConsumerState<CategorySelectionScreen> {
+class _CategorySelectionScreenState
+    extends ConsumerState<CategorySelectionScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMore = false;
 
@@ -28,11 +30,14 @@ class _CategorySelectionScreenState extends ConsumerState<CategorySelectionScree
 
   void _onScroll() {
     if (_isLoadingMore) return;
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
       final notifier = ref.read(categoriesInfiniteScrollProvider.notifier);
       if (notifier.hasMoreData) {
         setState(() => _isLoadingMore = true);
-        notifier.loadNextPage().whenComplete(() => setState(() => _isLoadingMore = false));
+        notifier.loadNextPage().whenComplete(
+          () => setState(() => _isLoadingMore = false),
+        );
       }
     }
   }
@@ -51,23 +56,27 @@ class _CategorySelectionScreenState extends ConsumerState<CategorySelectionScree
         ],
       ),
       body: categoriesAsync.when(
-        data: (categories) => ListView.builder(
-          controller: _scrollController,
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            final isSelected = category.id == widget.selectedCategoryId;
-            return ListTile(
-              title: Text(category.name),
-              selected: isSelected,
-              trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () => Navigator.of(context).pop(category),
-            );
-          },
-        ),
+        data:
+            (categories) => ListView.builder(
+              controller: _scrollController,
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final isSelected = category.id == widget.selectedCategoryId;
+                return ListTile(
+                  title: Text(category.name),
+                  selected: isSelected,
+                  trailing:
+                      isSelected
+                          ? const Icon(Icons.check, color: Colors.green)
+                          : null,
+                  onTap: () => Navigator.of(context).pop(category),
+                );
+              },
+            ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load categories')), 
+        error: (e, _) => Center(child: Text('Failed to load categories')),
       ),
     );
   }
-} 
+}

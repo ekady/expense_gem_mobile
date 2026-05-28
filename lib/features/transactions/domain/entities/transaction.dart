@@ -14,7 +14,7 @@ class Transaction extends Equatable {
   final Category? category;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  
+
   const Transaction({
     this.id,
     this.payee,
@@ -27,7 +27,7 @@ class Transaction extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
-  
+
   Transaction copyWith({
     String? id,
     String? payee,
@@ -53,7 +53,7 @@ class Transaction extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-  
+
   @override
   List<Object?> get props => [
     id,

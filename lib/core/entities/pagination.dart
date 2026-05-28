@@ -24,4 +24,4 @@ class Pagination {
   bool get hasPreviousPage => page > 1;
   int get nextPage => page + 1;
   int get previousPage => page - 1;
-} 
+}

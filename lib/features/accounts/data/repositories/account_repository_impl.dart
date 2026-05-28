@@ -16,24 +16,27 @@ class AccountRepositoryImpl implements AccountRepository {
     required this.remoteDataSource,
     required this.localDataSource,
   });
-  
+
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getAccounts({int page = 1, int limit = 10}) async {
+  Future<Either<Failure, Map<String, dynamic>>> getAccounts({
+    int page = 1,
+    int limit = 10,
+  }) async {
     try {
       // Always try remote first
-      final result = await remoteDataSource.getAccounts(page: page, limit: limit);
+      final result = await remoteDataSource.getAccounts(
+        page: page,
+        limit: limit,
+      );
       final accounts = result['accounts'] as List<Account>;
       final pagination = result['pagination'] as Pagination;
-      
+
       // Save to local cache (only for first page or when refreshing)
       if (page == 1) {
         await localDataSource.saveAccounts(accounts);
       }
-      
-      return Right({
-        'accounts': accounts,
-        'pagination': pagination,
-      });
+
+      return Right({'accounts': accounts, 'pagination': pagination});
     } on DioException catch (e) {
       // On network error, try local cache (only for first page)
       if (page == 1) {
@@ -50,12 +53,14 @@ class AccountRepositoryImpl implements AccountRepository {
           });
         }
       }
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, Account>> getAccountById(String id) async {
     try {
@@ -69,12 +74,14 @@ class AccountRepositoryImpl implements AccountRepository {
       if (cachedAccount != null) {
         return Right(cachedAccount);
       }
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, Account>> createAccount(Account account) async {
     try {
@@ -82,12 +89,14 @@ class AccountRepositoryImpl implements AccountRepository {
       await localDataSource.saveAccount(createdAccount);
       return Right(createdAccount);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, Account>> updateAccount(Account account) async {
     try {
@@ -95,12 +104,14 @@ class AccountRepositoryImpl implements AccountRepository {
       await localDataSource.saveAccount(updatedAccount);
       return Right(updatedAccount);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, void>> deleteAccount(String id) async {
     try {
@@ -108,7 +119,9 @@ class AccountRepositoryImpl implements AccountRepository {
       await localDataSource.deleteAccount(id);
       return const Right(null);
     } on DioException catch (e) {
-      return Left(ServerFailure(message: e.message ?? 'An unexpected error occurred'));
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

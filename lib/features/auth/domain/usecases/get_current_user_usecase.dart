@@ -6,9 +6,9 @@ import '../repositories/auth_repository.dart';
 
 class GetCurrentUserUseCase {
   final AuthRepository repository;
-  
+
   GetCurrentUserUseCase(this.repository);
-  
+
   Future<Either<Failure, User>> call() {
     return repository.getCurrentUser();
   }

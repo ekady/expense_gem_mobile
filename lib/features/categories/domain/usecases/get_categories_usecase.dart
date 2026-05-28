@@ -9,7 +9,10 @@ class GetCategoriesUseCase {
 
   GetCategoriesUseCase(this.repository);
 
-  Future<Either<Failure, List<Category>>> call({int page = 1, int pageSize = 20}) async {
+  Future<Either<Failure, List<Category>>> call({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
     return await repository.getCategories(page: page, limit: pageSize);
   }
-} 
+}

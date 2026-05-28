@@ -58,7 +58,8 @@ Future<List<Category>> categoriesByType(Ref ref, String type) async {
 
   return result.fold(
     (failure) => throw failure.message,
-    (categories) => categories, // Return all categories since type is no longer a field
+    (categories) =>
+        categories, // Return all categories since type is no longer a field
   );
 }
 
@@ -101,16 +102,17 @@ class CategoryFormState extends _$CategoryFormState {
   Future<void> saveCategory(Category category) async {
     state = const AsyncValue.loading();
 
-    final result = category.id.isEmpty
-        ? await ref.read(createCategoryUseCaseProvider).call(category)
-        : await ref.read(updateCategoryUseCaseProvider).call(category);
+    final result =
+        category.id.isEmpty
+            ? await ref.read(createCategoryUseCaseProvider).call(category)
+            : await ref.read(updateCategoryUseCaseProvider).call(category);
 
     state = result.fold(
       (failure) => AsyncValue.error(failure.message, StackTrace.current),
       (savedCategory) {
         // Invalidate and refresh all category-related providers
         ref.invalidate(categoriesProvider);
-        
+
         return AsyncValue.data(savedCategory);
       },
     );
@@ -129,7 +131,7 @@ class CategoryFormState extends _$CategoryFormState {
       (_) {
         // Invalidate and refresh all category-related providers
         ref.invalidate(categoriesProvider);
-        
+
         state = const AsyncValue.data(null);
       },
     );
@@ -177,6 +179,7 @@ class CategoriesInfiniteScrollNotifier extends AsyncNotifier<List<Category>> {
   }
 }
 
-final categoriesInfiniteScrollProvider = AsyncNotifierProvider<CategoriesInfiniteScrollNotifier, List<Category>>(
-  CategoriesInfiniteScrollNotifier.new,
-);
+final categoriesInfiniteScrollProvider =
+    AsyncNotifierProvider<CategoriesInfiniteScrollNotifier, List<Category>>(
+      CategoriesInfiniteScrollNotifier.new,
+    );

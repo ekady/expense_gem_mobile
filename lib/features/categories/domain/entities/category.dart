@@ -8,7 +8,7 @@ class Category extends Equatable {
   final String color;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  
+
   const Category({
     required this.id,
     required this.name,
@@ -18,7 +18,7 @@ class Category extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
-  
+
   Category copyWith({
     String? id,
     String? name,
@@ -38,7 +38,7 @@ class Category extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-  
+
   @override
   List<Object?> get props => [
     id,

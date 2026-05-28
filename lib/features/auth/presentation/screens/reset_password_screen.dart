@@ -72,7 +72,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         );
       }
 
-      if (success && mounted) { 
+      if (success && mounted) {
         context.go('/reset-password-success');
       }
     }

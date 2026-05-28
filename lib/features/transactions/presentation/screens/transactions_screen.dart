@@ -170,7 +170,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             selectedCategory: _selectedCategory,
             selectedAccount: _selectedAccount,
             selectedDateRange: _selectedDateRange,
-            selectedType: _selectedAmountType == null ? null : _selectedAmountType == 1 ? 'income' : 'expense',
+            selectedType:
+                _selectedAmountType == null
+                    ? null
+                    : _selectedAmountType == 1
+                    ? 'income'
+                    : 'expense',
             onCategoryChanged:
                 (categoryId) => _onFilterChanged(
                   category: categoryId,

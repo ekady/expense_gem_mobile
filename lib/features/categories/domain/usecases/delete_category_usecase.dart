@@ -11,4 +11,4 @@ class DeleteCategoryUseCase {
   Future<Either<Failure, void>> call(String id) async {
     return await repository.deleteCategory(id);
   }
-} 
+}
