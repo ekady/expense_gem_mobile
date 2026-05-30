@@ -1,3 +1,6 @@
+import 'package:expense_gem_mobile/core/error/custom_exception.dart';
+import 'package:expense_gem_mobile/core/error/failures.dart';
+import 'package:expense_gem_mobile/core/widgets/app_error_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +16,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
@@ -20,15 +25,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
+    setState(() {
+      _errorMessage = null;
+    });
+
     // Simulate loading for at least 2 seconds to show splash
     await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
 
     final result = await ref.read(getCurrentUserUseCaseProvider).call();
     result.fold(
       (failure) {
-        context.go('/login');
+        if (!mounted) return;
+
+        if (failure is AuthFailure) {
+          context.go('/login');
+          return;
+        }
+
+        setState(() {
+          _errorMessage = CustomException.apiUnavailableMessage;
+        });
       },
       (user) {
+        if (!mounted) return;
         context.go('/dashboard');
       },
     );
@@ -36,6 +56,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final errorMessage = _errorMessage;
+    if (errorMessage != null) {
+      return AppErrorScreen(
+        title: 'Unable to connect',
+        message: errorMessage,
+        onRetry: _checkAuth,
+      );
+    }
+
     return Scaffold(
       body: Center(
         child: Column(

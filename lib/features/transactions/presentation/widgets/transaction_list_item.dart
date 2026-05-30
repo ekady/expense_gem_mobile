@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../currency/domain/entities/app_currency.dart';
+import '../../../currency/presentation/providers/currency_providers.dart';
 import '../../domain/entities/transaction.dart';
 
 class TransactionListItem extends ConsumerWidget {
   final Transaction transaction;
   final VoidCallback onTap;
-  
+
   const TransactionListItem({
     super.key,
     required this.transaction,
@@ -18,13 +20,13 @@ class TransactionListItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isIncome = transaction.type == 'income';
-    
+    final currency =
+        ref.watch(selectedCurrencyProvider).value ?? AppCurrency.usd;
+
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -36,7 +38,9 @@ class TransactionListItem extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(transaction.category?.color).withValues(alpha: 0.2),
+                  color: _getCategoryColor(
+                    transaction.category?.color,
+                  ).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -77,8 +81,12 @@ class TransactionListItem extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             transaction.account?.name ?? 'Unknown Account',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -88,9 +96,15 @@ class TransactionListItem extends ConsumerWidget {
                         const Text('•'),
                         const SizedBox(width: 8),
                         Text(
-                          AppDateUtils.formatDate(transaction.date ?? DateTime.now()),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          AppDateUtils.formatDate(
+                            transaction.date ?? DateTime.now(),
+                          ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -105,8 +119,8 @@ class TransactionListItem extends ConsumerWidget {
                 children: [
                   Text(
                     isIncome
-                        ? '+ ${CurrencyFormatter.format(transaction.amount ?? 0)}'
-                        : '- ${CurrencyFormatter.format((transaction.amount ?? 0) * -1)}',
+                        ? '+ ${CurrencyFormatter.format(transaction.amount ?? 0, currency: currency)}'
+                        : '- ${CurrencyFormatter.format((transaction.amount ?? 0) * -1, currency: currency)}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isIncome ? Colors.green : Colors.red,
@@ -114,11 +128,15 @@ class TransactionListItem extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: isIncome 
-                          ? Colors.green.withValues(alpha: 0.1)
-                          : Colors.red.withValues(alpha: 0.1),
+                      color:
+                          isIncome
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -138,7 +156,7 @@ class TransactionListItem extends ConsumerWidget {
       ),
     );
   }
-  
+
   Color _getCategoryColor(String? colorHex) {
     if (colorHex != null && colorHex.isNotEmpty) {
       try {
@@ -150,7 +168,7 @@ class TransactionListItem extends ConsumerWidget {
     }
     return Colors.grey;
   }
-  
+
   IconData _getIconData(String? iconName) {
     switch (iconName) {
       case 'restaurant':

@@ -47,9 +47,6 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
         widget.selectedAccount != null ||
         widget.selectedDateRange != null;
 
-    final categoriesAsync = ref.watch(categoriesProvider);
-    final accountsAsync = ref.watch(accountsProvider);
-
     return Card(
       margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -194,9 +191,10 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                             label: selectedCategoryName ?? 'All Categories',
                             isSelected: true,
                             onSelected: (_) => widget.onCategoryChanged(null),
-                            onDeleted: widget.selectedCategory != null
-                                ? () => widget.onCategoryChanged(null)
-                                : null,
+                            onDeleted:
+                                widget.selectedCategory != null
+                                    ? () => widget.onCategoryChanged(null)
+                                    : null,
                           );
                         },
                       ),
@@ -252,9 +250,10 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
                             label: selectedAccountName ?? 'All Accounts',
                             isSelected: true,
                             onSelected: (_) => widget.onAccountChanged(null),
-                            onDeleted: widget.selectedAccount != null
-                                ? () => widget.onAccountChanged(null)
-                                : null,
+                            onDeleted:
+                                widget.selectedAccount != null
+                                    ? () => widget.onAccountChanged(null)
+                                    : null,
                           );
                         },
                       ),
@@ -366,14 +365,18 @@ class _TransactionFilterState extends ConsumerState<TransactionFilter> {
       selected: isSelected,
       onSelected: onSelected,
       onDeleted: onDeleted,
-      deleteIcon: onDeleted != null ? Icon(Icons.close, color: Theme.of(context).colorScheme.primary,) : null,
+      deleteIcon:
+          onDeleted != null
+              ? Icon(Icons.close, color: Theme.of(context).colorScheme.primary)
+              : null,
       backgroundColor: Theme.of(context).cardColor,
       selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
       checkmarkColor: Theme.of(context).primaryColor,
       labelStyle: TextStyle(
-        color: isSelected
-            ? Theme.of(context).primaryColor
-            : Theme.of(context).colorScheme.onSurface,
+        color:
+            isSelected
+                ? Theme.of(context).primaryColor
+                : Theme.of(context).colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
     );

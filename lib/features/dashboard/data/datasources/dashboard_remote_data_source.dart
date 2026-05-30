@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:expense_gem_mobile/core/error/custom_exception.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
+
 import '../../domain/entities/transaction_summary.dart';
 
 abstract class DashboardRemoteDataSource {
@@ -37,10 +39,20 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       return TransactionSummary.fromJson(response.data);
     } on DioException catch (e) {
       logger.e('Get dashboard summary error: ${e.message}');
-      rethrow;
+      throw _handleDioError(e);
     } catch (e) {
       logger.e('Unexpected dashboard summary error: $e');
       rethrow;
     }
+  }
+
+  Exception _handleDioError(DioException e) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError) {
+      throw CustomException(CustomException.apiUnavailableMessage);
+    }
+
+    throw CustomException('Unable to load dashboard. Please try again.');
   }
 }

@@ -10,11 +10,9 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -22,9 +20,9 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             Text(
               'Display',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Card(
@@ -37,9 +35,11 @@ class SettingsScreen extends ConsumerWidget {
                     trailing: Switch(
                       value: themeMode == ThemeMode.dark,
                       onChanged: (value) {
-                        ref.read(themeModeProvider.notifier).setThemeMode(
-                          value ? ThemeMode.dark : ThemeMode.light,
-                        );
+                        ref
+                            .read(themeModeProvider.notifier)
+                            .setThemeMode(
+                              value ? ThemeMode.dark : ThemeMode.light,
+                            );
                       },
                     ),
                   ).animate().fadeIn(delay: 100.ms),
@@ -59,9 +59,9 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Text(
               'Transactions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Card(
@@ -103,9 +103,9 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Text(
               'About',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Card(
@@ -155,7 +155,7 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildSettingsItem(
     BuildContext context, {
     required IconData icon,
@@ -173,54 +173,49 @@ class SettingsScreen extends ConsumerWidget {
       ),
       title: Text(
         title,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: textColor,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(color: textColor),
       ),
       subtitle: subtitle != null ? Text(subtitle) : null,
-      trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
+      trailing:
+          trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 4,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
-  
+
   void _showClearDataDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear All Data'),
-        content: const Text(
-          'This will permanently delete all your transactions, accounts, and categories. This action cannot be undone. Are you sure you want to continue?'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('CANCEL'),
-          ),
-          TextButton(
-            onPressed: () {
-              // Clear all data
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('All data has been cleared'),
-                ),
-              );
-            },
-            child: Text(
-              'CLEAR DATA',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-              ),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Clear All Data'),
+            content: const Text(
+              'This will permanently delete all your transactions, accounts, and categories. This action cannot be undone. Are you sure you want to continue?',
             ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('CANCEL'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Clear all data
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('All data has been cleared')),
+                  );
+                },
+                child: Text(
+                  'CLEAR DATA',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
