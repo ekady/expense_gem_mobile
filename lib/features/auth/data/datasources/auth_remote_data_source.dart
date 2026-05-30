@@ -17,6 +17,16 @@ abstract class AuthRemoteDataSource {
   Future<String> validateOtp(String email, String otp);
   Future<void> resetPassword(String email, String token, String password);
   Future<User> getUserProfile();
+  Future<User> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    String? picturePath,
+  });
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String password,
+    required String passwordConfirm,
+  });
   Future<Map<String, dynamic>> refreshToken(String refreshToken);
   Future<void> logout();
 }
@@ -150,13 +160,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await dio.get('/user/me');
 
-      return User(
-        id: response.data['id'],
-        firstName: response.data['firstName'],
-        lastName: response.data['lastName'],
-        email: response.data['email'],
-        picture: response.data['picture'],
-      );
+      return _userFromJson(response.data['data']);
     } on DioException catch (e) {
       logger.e('Get user profile error: ${e.message}');
       throw _handleDioError(e);
@@ -166,19 +170,77 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  @override
+  Future<User> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    String? picturePath,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'firstName': firstName,
+        'lastName': lastName,
+        if (picturePath != null)
+          'picture': await MultipartFile.fromFile(picturePath),
+      });
+
+      final response = await dio.put(
+        '/user/me',
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+
+      return _userFromJson(response.data['data']);
+    } on DioException catch (e) {
+      logger.e('Update user profile error: ${e.message}');
+      throw _handleDioError(e);
+    } catch (e) {
+      logger.e('Unexpected update user profile error: $e');
+      throw Exception('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    try {
+      await dio.put(
+        '/user/me/update-password',
+        data: {
+          'currentPassword': currentPassword,
+          'password': password,
+          'passwordConfirm': passwordConfirm,
+        },
+      );
+    } on DioException catch (e) {
+      logger.e('Update password error: ${e.message}');
+      throw _handleDioError(e);
+    } catch (e) {
+      logger.e('Unexpected update password error: $e');
+      throw Exception('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  User _userFromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      email: json['email'],
+      picture: json['picture'],
+    );
+  }
+
   Exception _handleDioError(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout) {
-      throw CustomException(
-        'Connection timeout. Please check your internet connection.',
-      );
+      throw CustomException(CustomException.apiUnavailableMessage);
     } else if (e.type == DioExceptionType.receiveTimeout) {
-      throw CustomException(
-        'Server is taking too long to respond. Please try again later.',
-      );
+      throw CustomException(CustomException.apiUnavailableMessage);
     } else if (e.type == DioExceptionType.connectionError) {
-      throw CustomException(
-        'No internet connection. Please check your network settings.',
-      );
+      throw CustomException(CustomException.apiUnavailableMessage);
     } else if (e.response != null) {
       final statusCode = e.response!.statusCode;
       final responseData = e.response!.data;

@@ -159,6 +159,48 @@ final validateOtpUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ValidateOtpUseCaseRef = AutoDisposeProviderRef<ValidateOtpUseCase>;
+String _$updateUserProfileUseCaseHash() =>
+    r'fa444abd8c77816b2d7db0e79cc4334f5b165bd1';
+
+/// See also [updateUserProfileUseCase].
+@ProviderFor(updateUserProfileUseCase)
+final updateUserProfileUseCaseProvider =
+    AutoDisposeProvider<UpdateUserProfileUseCase>.internal(
+      updateUserProfileUseCase,
+      name: r'updateUserProfileUseCaseProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$updateUserProfileUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef UpdateUserProfileUseCaseRef =
+    AutoDisposeProviderRef<UpdateUserProfileUseCase>;
+String _$updatePasswordUseCaseHash() =>
+    r'87c39724b7117133858ebb58b374e8d3211834d0';
+
+/// See also [updatePasswordUseCase].
+@ProviderFor(updatePasswordUseCase)
+final updatePasswordUseCaseProvider =
+    AutoDisposeProvider<UpdatePasswordUseCase>.internal(
+      updatePasswordUseCase,
+      name: r'updatePasswordUseCaseProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$updatePasswordUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef UpdatePasswordUseCaseRef =
+    AutoDisposeProviderRef<UpdatePasswordUseCase>;
 String _$authStateHash() => r'ab99bb1b16e3ccfa69564d256fb38a40ad729daa';
 
 /// See also [AuthState].
@@ -264,5 +306,40 @@ final resetPasswordFormStateProvider =
     );
 
 typedef _$ResetPasswordFormState = AutoDisposeAsyncNotifier<void>;
+String _$profileFormStateHash() => r'55565361797eacd670e7a574e90198fafb51a432';
+
+/// See also [ProfileFormState].
+@ProviderFor(ProfileFormState)
+final profileFormStateProvider =
+    AutoDisposeAsyncNotifierProvider<ProfileFormState, User?>.internal(
+      ProfileFormState.new,
+      name: r'profileFormStateProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$profileFormStateHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$ProfileFormState = AutoDisposeAsyncNotifier<User?>;
+String _$changePasswordFormStateHash() =>
+    r'91bc5fb76a0512a96ac1f8561483c7fafe46bb6b';
+
+/// See also [ChangePasswordFormState].
+@ProviderFor(ChangePasswordFormState)
+final changePasswordFormStateProvider =
+    AutoDisposeAsyncNotifierProvider<ChangePasswordFormState, void>.internal(
+      ChangePasswordFormState.new,
+      name: r'changePasswordFormStateProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$changePasswordFormStateHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$ChangePasswordFormState = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

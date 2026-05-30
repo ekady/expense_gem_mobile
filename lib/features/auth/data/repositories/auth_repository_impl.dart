@@ -135,6 +135,51 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, User>> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    String? picturePath,
+  }) async {
+    try {
+      final user = await remoteDataSource.updateUserProfile(
+        firstName: firstName,
+        lastName: lastName,
+        picturePath: picturePath,
+      );
+      await localDataSource.saveUser(user);
+      return Right(user);
+    } on DioException catch (e) {
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updatePassword({
+    required String currentPassword,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    try {
+      await remoteDataSource.updatePassword(
+        currentPassword: currentPassword,
+        password: password,
+        passwordConfirm: passwordConfirm,
+      );
+      return const Right(true);
+    } on DioException catch (e) {
+      return Left(
+        ServerFailure(message: e.message ?? 'An unexpected error occurred'),
+      );
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logout() async {
     try {
       final refreshToken = await localDataSource.getRefreshToken();
@@ -192,8 +237,8 @@ class AuthInterceptor extends Interceptor {
   final Logger _logger = getIt<Logger>();
 
   AuthInterceptor(
-    this.dio, 
-    this.localDataSource, 
+    this.dio,
+    this.localDataSource,
     this.remoteDataSource, {
     VoidCallback? onForceLogout,
   }) : _onForceLogout = onForceLogout;
@@ -209,7 +254,8 @@ class AuthInterceptor extends Interceptor {
   ) async {
     final token = await localDataSource.getToken();
     if (token != null) {
-      options.headers['Authorization'] = options.headers['Authorization'] ?? 'Bearer $token';
+      options.headers['Authorization'] =
+          options.headers['Authorization'] ?? 'Bearer $token';
       _logger.d('Added Authorization header to request: ${options.path}');
     }
     handler.next(options);
@@ -217,28 +263,32 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    _logger.d('Interceptor received error:  [31m${err.response?.statusCode} [0m for ${err.requestOptions.path}');
-    
+    _logger.d(
+      'Interceptor received error:  [31m${err.response?.statusCode} [0m for ${err.requestOptions.path}',
+    );
+
     // Prevent infinite loop: if this is a refresh token request, do not try to refresh again
     if (err.requestOptions.headers['is-refresh-token'] == true) {
-      _logger.w('401 received on refresh token request. Forcing logout, not retrying.');
+      _logger.w(
+        '401 received on refresh token request. Forcing logout, not retrying.',
+      );
       await _forceLogout();
       return handler.next(err);
     }
     if (err.response?.statusCode == 401) {
       _logger.d('Received 401 error for request: ${err.requestOptions.path}');
-      
+
       try {
         final refreshToken = await localDataSource.getRefreshToken();
         _logger.d('Refresh token found: ${refreshToken != null}');
-        
+
         if (refreshToken == null) {
           _logger.w('No refresh token found, forcing logout');
           await _forceLogout();
           return handler.next(err);
         }
 
-         final result = await remoteDataSource.refreshToken(refreshToken);
+        final result = await remoteDataSource.refreshToken(refreshToken);
         _logger.d('Refresh result: ${result.keys}');
 
         if (result.isEmpty || result['token'] == null) {
@@ -255,19 +305,20 @@ class AuthInterceptor extends Interceptor {
         final opts = err.requestOptions;
         opts.headers['Authorization'] = 'Bearer ${result['token']}';
         final cloneReq = await dio.fetch(opts);
-        
+
         _logger.d('Successfully retried request with new token');
         return handler.resolve(cloneReq);
-        
       } catch (e) {
         _logger.e('Token refresh failed: $e');
         await _forceLogout();
         return handler.next(err);
       }
     } else {
-      _logger.d('Not a 401 error, passing through: ${err.response?.statusCode}');
+      _logger.d(
+        'Not a 401 error, passing through: ${err.response?.statusCode}',
+      );
     }
-    
+
     handler.next(err);
   }
 
@@ -278,7 +329,7 @@ class AuthInterceptor extends Interceptor {
       await localDataSource.deleteToken();
       await localDataSource.deleteRefreshToken();
       await localDataSource.deleteUser();
-      
+
       // Notify about forced logout
       _logger.d('Calling force logout callback...');
       _onForceLogout?.call();

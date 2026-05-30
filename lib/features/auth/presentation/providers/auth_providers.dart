@@ -11,6 +11,8 @@ import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/update_password_usecase.dart';
+import '../../domain/usecases/update_user_profile_usecase.dart';
 import '../../domain/usecases/validate_otp_usecase.dart';
 
 part 'auth_providers.g.dart';
@@ -54,6 +56,16 @@ IsLoggedInUseCase isLoggedInUseCase(Ref ref) {
 @riverpod
 ValidateOtpUseCase validateOtpUseCase(Ref ref) {
   return ValidateOtpUseCase(getIt<AuthRepository>());
+}
+
+@riverpod
+UpdateUserProfileUseCase updateUserProfileUseCase(Ref ref) {
+  return UpdateUserProfileUseCase(getIt<AuthRepository>());
+}
+
+@riverpod
+UpdatePasswordUseCase updatePasswordUseCase(Ref ref) {
+  return UpdatePasswordUseCase(getIt<AuthRepository>());
 }
 
 // Auth State Provider
@@ -209,12 +221,87 @@ class ResetPasswordFormState extends AutoDisposeAsyncNotifier<void> {
     return;
   }
 
-  Future<bool> resetPassword(String email, String token, String password) async {
+  Future<bool> resetPassword(
+    String email,
+    String token,
+    String password,
+  ) async {
     state = const AsyncValue.loading();
 
     final result = await ref
         .read(resetPasswordUseCaseProvider)
         .call(email, token, password);
+
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (_) {
+        state = const AsyncValue.data(null);
+        return true;
+      },
+    );
+  }
+}
+
+@riverpod
+class ProfileFormState extends AutoDisposeAsyncNotifier<User?> {
+  @override
+  Future<User?> build() async {
+    return null;
+  }
+
+  Future<bool> updateProfile({
+    required String firstName,
+    required String lastName,
+    String? picturePath,
+  }) async {
+    state = const AsyncValue.loading();
+
+    final result = await ref
+        .read(updateUserProfileUseCaseProvider)
+        .call(
+          firstName: firstName,
+          lastName: lastName,
+          picturePath: picturePath,
+        );
+
+    return result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+        return false;
+      },
+      (user) {
+        ref.read(authStateProvider.notifier).state = AsyncValue.data(user);
+        state = AsyncValue.data(user);
+        return true;
+      },
+    );
+  }
+}
+
+@riverpod
+class ChangePasswordFormState extends AutoDisposeAsyncNotifier<void> {
+  @override
+  Future<void> build() async {
+    return;
+  }
+
+  Future<bool> updatePassword({
+    required String currentPassword,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    state = const AsyncValue.loading();
+
+    final result = await ref
+        .read(updatePasswordUseCaseProvider)
+        .call(
+          currentPassword: currentPassword,
+          password: password,
+          passwordConfirm: passwordConfirm,
+        );
 
     return result.fold(
       (failure) {
